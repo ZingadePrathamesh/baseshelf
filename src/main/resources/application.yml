@@ -1,0 +1,13 @@
+spring:
+  application:
+    name : baseshelf
+  datasource:
+    url: jdbc:postgresql://localhost:5436/baseshelfdb1
+    username: baseshelf
+    password: 2024baseshelf@
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database: postgresql
+    show-sql: true
