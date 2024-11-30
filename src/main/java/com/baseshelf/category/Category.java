@@ -1,6 +1,7 @@
 package com.baseshelf.category;
 
 import com.baseshelf.product.Product;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,11 +26,11 @@ public class Category {
     )
     private Long id;
 
-    @Column(unique = true)
     private String name;
 
     private String categoryType;
 
     @ManyToMany(mappedBy = "categories")
+    @JsonBackReference
     private List<Product> products = new ArrayList<>();
 }

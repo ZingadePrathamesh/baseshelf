@@ -1,14 +1,17 @@
 package com.baseshelf.category;
 
 import jakarta.persistence.criteria.Predicate;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import net.datafaker.Faker;
+import net.datafaker.providers.base.Cat;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.annotation.Order;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import javax.swing.*;
 import java.util.*;
 
 @Service
@@ -75,10 +78,17 @@ public class CategoryService {
         categoryJpaRepository.delete(dynamicFilterByParams(id, name, categoryType));
     }
 
+    //In most cases, using @Transactional is better than relying on saveAndFlush for updates in Spring Data JPA.
+    //Caution while using this method as it can cause unwanted effects bcz each category is mapped with many products.
+    //So change in the category value can cause issue with the data analysis.
+    @Transactional
     public Category updateById(Long id, Category paramCategory){
-        this.deleteByIdOrNameOrCategoryType(id, null, null);
-        paramCategory.setId(id);
-        return this.saveCategory(paramCategory);
+        Category category = categoryJpaRepository.findById(id).orElseThrow(
+                ()-> new CategoryNotFoundException("Category with id: "+ id + " does not exist."));
+
+        category.setName(paramCategory.getName());
+        category.setCategoryType(paramCategory.getCategoryType());
+        return category;
     }
 
     //Used specifications to filter according to the availability of the conditions (id, name, type)
