@@ -1,5 +1,6 @@
 package com.baseshelf.category;
 
+import com.baseshelf.product.Product;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -62,6 +63,11 @@ public class CategoryService {
         };
     }
 
+    public Category getCategoryById(Long id){
+        return categoryJpaRepository.findById(id)
+                .orElseThrow(()-> new CategoryNotFoundException("Category with id: "+ id + " not found"));
+    }
+
     //Saves a category if not already present. Otherwise returns the old.
     public Category saveCategory(Category paramCategory){
         Optional<Category> categoryOpt = categoryJpaRepository.findByNameAndCategoryType
@@ -78,16 +84,25 @@ public class CategoryService {
         categoryJpaRepository.delete(dynamicFilterByParams(id, name, categoryType));
     }
 
-    //In most cases, using @Transactional is better than relying on saveAndFlush for updates in Spring Data JPA.
-    //Caution while using this method as it can cause unwanted effects bcz each category is mapped with many products.
-    //So change in the category value can cause issue with the data analysis.
+//    //refer to the pitfall no.3 of the article "6-performance-pitfalls-when-using-spring-data-jpa"
+//    //In most cases, using @Transactional is better than relying on saveAndFlush for updates in Spring Data JPA.
+//    //Caution while using this method, as it can cause unwanted effects bcz each category is mapped with many products.
+//    //So change in the category value can cause issue with the data analysis.
     @Transactional
-    public Category updateById(Long id, Category paramCategory){
-        Category category = categoryJpaRepository.findById(id).orElseThrow(
-                ()-> new CategoryNotFoundException("Category with id: "+ id + " does not exist."));
+    public Category updateCategory(Long id, Category paramCategory){
+        Category category = categoryJpaRepository.findById(id)
+                .orElseThrow(() -> new CategoryNotFoundException("Category with id: " + id + " does not exist."));
 
-        category.setName(paramCategory.getName());
+        //if any category exists with the same properties as passed in the new category the update will not occur.
+        Optional<Category> existCategory = categoryJpaRepository.findByNameAndCategoryType(paramCategory.getName(), paramCategory.getCategoryType());
+        if(existCategory.isPresent()){
+            throw new CategoryAlreadyExist("Category with name:" + paramCategory.getName() +
+                    " and categoryType: "+ paramCategory.getCategoryType() + " already exists with id: " + existCategory.get().getId()
+                    );
+        }
+
         category.setCategoryType(paramCategory.getCategoryType());
+        category.setName(paramCategory.getName());
         return category;
     }
 

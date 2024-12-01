@@ -16,6 +16,11 @@ public class CategoryController {
         return categoryService.getAllByIdOrNameOrCategoryType(null, null, null);
     }
 
+    @GetMapping("id/{id}")
+    public Category getById(@PathVariable(name = "id") Long id){
+        return categoryService.getCategoryById(id);
+    }
+
     @GetMapping("filters")
     public List<Category> getCategoriesByFilter(
             @RequestParam(required = false, name = "id") Long id,
@@ -27,6 +32,11 @@ public class CategoryController {
 
     @PutMapping("id/{id}")
     public Category updateCategoryById(@PathVariable(name = "id") Long id, @RequestBody Category newCategory){
-        return categoryService.updateById(id, newCategory);
+        return categoryService.updateCategory(id, newCategory);
+    }
+
+    @DeleteMapping("id/{id}")
+    public void deleteById(@PathVariable(name = "id") Long id){
+        categoryService.deleteByIdOrNameOrCategoryType(id, null, null);
     }
 }
