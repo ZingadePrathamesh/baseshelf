@@ -1,0 +1,34 @@
+package com.baseshelf.brand;
+
+import com.baseshelf.product.Product;
+import com.baseshelf.store.Store;
+import com.baseshelf.utils.BaseEntity;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+
+import java.util.List;
+
+@Entity
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@SuperBuilder
+@EqualsAndHashCode(callSuper = true)
+public class Brand extends BaseEntity {
+    private String description;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "store_id")
+    @JsonBackReference
+    private Store store;
+
+
+    @OneToMany(mappedBy = "brand")
+    @JsonBackReference
+    private List<Product> products;
+}

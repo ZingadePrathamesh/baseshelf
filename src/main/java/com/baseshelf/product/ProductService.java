@@ -21,8 +21,8 @@ import java.util.Set;
 public class ProductService {
     private final ProductJpaRepository productJpaRepository;
 
-    @Bean
-    @Order(value = 3)
+//    @Bean
+//    @Order(value = 3)
     public CommandLineRunner insertProduct(
             ProductJpaRepository productJpaRepository,
             CategoryService categoryService

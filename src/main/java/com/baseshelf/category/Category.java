@@ -1,6 +1,7 @@
 package com.baseshelf.category;
 
 import com.baseshelf.product.Product;
+import com.baseshelf.store.Store;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -33,4 +34,11 @@ public class Category {
     @ManyToMany(mappedBy = "categories")
     @JsonBackReference
     private List<Product> products = new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "store_id")
+    @JsonBackReference
+    private Store store;
+
+    private boolean isGlobal;
 }

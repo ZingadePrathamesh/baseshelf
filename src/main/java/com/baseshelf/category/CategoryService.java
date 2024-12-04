@@ -1,18 +1,15 @@
 package com.baseshelf.category;
 
-import com.baseshelf.product.Product;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import net.datafaker.Faker;
-import net.datafaker.providers.base.Cat;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.annotation.Order;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import javax.swing.*;
 import java.util.*;
 
 @Service
