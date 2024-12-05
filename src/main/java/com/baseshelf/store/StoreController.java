@@ -1,10 +1,9 @@
 package com.baseshelf.store;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
-
-import javax.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -29,7 +28,7 @@ public class StoreController {
     }
 
     @PostMapping("/registers")
-    public Store registerStore(@Valid @RequestBody Store store){
+    public Store registerStore(@Valid @RequestBody Store store) throws MethodArgumentNotValidException, NoSuchMethodException {
         return storeService.registerStore(store);
     }
 

@@ -1,15 +1,14 @@
 package com.baseshelf.utils;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @MappedSuperclass
 @Data
@@ -28,6 +27,7 @@ public class BaseEntity {
     private Long id;
 
     @Size(message = "Name should be between 2 to 30 characters", max = 30, min = 2)
+    @NotNull(message = "Name cannot be null.")
     private String name;
 
     @Column(updatable = false)

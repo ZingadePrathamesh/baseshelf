@@ -7,16 +7,19 @@ import com.baseshelf.product.Product;
 import com.baseshelf.utils.BaseEntity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.OneToMany;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
 import java.util.List;
 
 @Entity
@@ -28,12 +31,11 @@ import java.util.List;
 public class Store extends BaseEntity {
 
     @Email(message = "Email should be valid")
-    @NotBlank(message = "Email is mandatory")
+    @NotNull(message = "Email is mandatory")
     private String email;
 
-    @NotBlank(message = "Password is mandatory")
-    @Size(min = 8, message = "Password must be at least 8 characters long")
-    @JsonIgnore
+    @Size(min = 8, max = 30, message = "Password must be at least 8 characters long")
+    @NotNull(message = "password cannot be null")
     private String password;
 
     @Size(max = 500, message = "Description must not exceed 500 characters")

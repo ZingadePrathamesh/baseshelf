@@ -7,6 +7,7 @@ import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.AbstractBindingResult;
+import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
@@ -31,9 +32,19 @@ public class StoreService {
         return storeRepository.count();
     }
 
-    public Store registerStore(Store store){
+    public Store registerStore(Store store) throws MethodArgumentNotValidException, NoSuchMethodException {
             //some password logic to be integrated later
-            return storeRepository.save(store);
+        Optional<Store> storeOpt = storeRepository.getStoreByEmail(store.getEmail());
+        if(storeOpt.isPresent()){
+            BindingResult bindingResult = new BeanPropertyBindingResult(store, "store");
+            bindingResult.rejectValue("email", "EmailInUse", "Email is already in use.");
+
+            throw new MethodArgumentNotValidException(
+                    new MethodParameter(this.getClass().getDeclaredMethod("registerStore", Store.class), 0),
+                    bindingResult
+            );
+        }
+        return storeRepository.save(store);
     }
 
     @Bean
