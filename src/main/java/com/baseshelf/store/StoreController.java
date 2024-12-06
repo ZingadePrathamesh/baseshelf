@@ -2,6 +2,7 @@ package com.baseshelf.store;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -32,4 +33,18 @@ public class StoreController {
         return storeService.registerStore(store);
     }
 
+    @PutMapping("/disable/id/{id}")
+    public void disableStore(@PathVariable(name = "id") Long id){
+        storeService.disableStore(id);
+    }
+
+    @DeleteMapping("/delete/id/{id}")
+    public void deleteStore(@PathVariable(name = "id") Long id){
+        storeService.deleteStore(id);
+    }
+
+    @PutMapping("/update/id/{id}")
+    public Store updateStore(@PathVariable(name = "id") Long id, @Valid @RequestBody StoreDto storeDto){
+        return storeService.updateStoreById(id, storeDto);
+    }
 }

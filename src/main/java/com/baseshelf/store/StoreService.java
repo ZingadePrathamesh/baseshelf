@@ -1,17 +1,22 @@
 package com.baseshelf.store;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.AbstractBindingResult;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
+import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -36,16 +41,11 @@ public class StoreService {
             //some password logic to be integrated later
         Optional<Store> storeOpt = storeRepository.getStoreByEmail(store.getEmail());
         if(storeOpt.isPresent()){
-            BindingResult bindingResult = new BeanPropertyBindingResult(store, "store");
-            bindingResult.rejectValue("email", "EmailInUse", "Email is already in use.");
-
-            throw new MethodArgumentNotValidException(
-                    new MethodParameter(this.getClass().getDeclaredMethod("registerStore", Store.class), 0),
-                    bindingResult
-            );
+            handleEmailAlreadyExistException(store);
         }
         return storeRepository.save(store);
     }
+
 
     @Bean
     @Order(value = 1)
@@ -59,8 +59,39 @@ public class StoreService {
                     .description("Store for testing")
                     .name("John Doe Clothing")
                     .build();
-            storeRepository.save(store);
+            this.registerStore(store);
         };
+    }
+
+
+    @Transactional
+    public void disableStore(Long id) {
+        Store store = this.getById(id);
+        store.setLastModifiedOn(LocalDate.now());
+        store.setActive(false);
+    }
+
+    public void deleteStore(Long id){
+        storeRepository.deleteById(id);
+    }
+
+    @Transactional
+    public Store updateStoreById(Long id, StoreDto store){
+        Store store1 = this.getById(id);
+        store1.setName(store.getName());
+        store1.setDescription(store.getDescription());
+        store1.setLastModifiedOn(LocalDate.now());
+        return store1;
+    }
+
+    private void handleEmailAlreadyExistException(Store store) throws MethodArgumentNotValidException, NoSuchMethodException {
+        BindingResult bindingResult = new BeanPropertyBindingResult(store, "store");
+        bindingResult.rejectValue("email", "EmailInUse", "Email is already in use.");
+
+        throw new MethodArgumentNotValidException(
+                new MethodParameter(this.getClass().getDeclaredMethod("registerStore", Store.class), 0),
+                bindingResult
+        );
     }
 
 

@@ -11,10 +11,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -76,5 +73,11 @@ public class ProductService {
 
           return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
         };
+    }
+
+    public Product getById(Long productId) {
+        Optional<Product> product = productJpaRepository.findById(productId);
+        return product.orElseThrow(()->
+                new ProductNotFoundException("Product with id: " + productId + " does not exist."));
     }
 }

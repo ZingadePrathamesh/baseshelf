@@ -36,8 +36,11 @@ public class BaseEntity {
     @Column(insertable = false)
     private LocalDate lastModifiedOn;
 
+    private boolean isActive;
+
     @PrePersist
-    public void setCreatedOn(){
+    public void setValues(){
         this.createdOn = LocalDate.now();
+        this.isActive = true;
     }
 }

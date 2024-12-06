@@ -1,7 +1,9 @@
 package com.baseshelf.exception;
 
+import com.baseshelf.brand.BrandNotFoundException;
 import com.baseshelf.category.CategoryAlreadyExist;
 import com.baseshelf.category.CategoryNotFoundException;
+import com.baseshelf.product.ProductNotFoundException;
 import com.baseshelf.store.StoreNotFoundException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -21,7 +23,8 @@ import java.util.Map;
 @ControllerAdvice
 public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
 
-    @ExceptionHandler({CategoryNotFoundException.class, StoreNotFoundException.class})
+    @ExceptionHandler({CategoryNotFoundException.class, StoreNotFoundException.class,
+            BrandNotFoundException.class, ProductNotFoundException.class})
     public final ResponseEntity<ErrorDetails> handleResourceNotFoundException(
             Exception ex, WebRequest request)
     throws Exception{

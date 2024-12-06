@@ -7,6 +7,7 @@ import com.baseshelf.product.Product;
 import com.baseshelf.utils.BaseEntity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -36,6 +37,7 @@ public class Store extends BaseEntity {
 
     @Size(min = 8, max = 30, message = "Password must be at least 8 characters long")
     @NotNull(message = "password cannot be null")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @Size(max = 500, message = "Description must not exceed 500 characters")
