@@ -1,5 +1,9 @@
 package com.baseshelf.category;
 
+import com.baseshelf.product.Product;
+import com.baseshelf.product.ProductService;
+import com.baseshelf.store.Store;
+import com.baseshelf.store.StoreService;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -16,69 +20,98 @@ import java.util.*;
 @RequiredArgsConstructor
 public class CategoryService {
     private final CategoryJpaRepository categoryJpaRepository;
+    private final StoreService storeService;
+    private final ProductService productService;
 
     @Bean
-    @Order(value = 1)
-    public CommandLineRunner commandLineRunner(
+    @Order(value = 3)
+    public CommandLineRunner insertCategory(
             CategoryJpaRepository categoryJpaRepository
     ){
         return args -> {
-            Faker faker = new Faker();
-            Set<Category> categories = new HashSet<>();
-            for (int i = 0; i< 50; i++){
-                String color = faker.color().name();
-                Category category = Category.builder()
-                        .name(color)
-                        .categoryType("COLOR".toUpperCase())
-                        .build();
-                categories.add(category);
-            }
-            categoryJpaRepository.saveAll(categories);
+          Store store = storeService.getByEmail("johndoe@gmail.com");
+          Store store1 = storeService.getByEmail("smartit@gmail.com");
+          Faker faker = new Faker();
+          Set<Category> categories = new HashSet<>();
+          for(int i = 0; i< 100;i ++){
+              Category  category = Category.builder()
+                      .global(true)
+                      .store(store)
+                      .categoryType("COLOR")
+                      .name(faker.color().name())
+                      .build();
+              categories.add(category);
+          }
+
+          //For johndoe clothing store
+          Category category = Category.builder()
+                  .name("Cotton")
+                  .categoryType("MATERIAL")
+                  .store(store)
+                  .global(false)
+                  .build();
+          Category category2 = Category.builder()
+                  .name("Linen")
+                  .categoryType("MATERIAL")
+                  .store(store1)
+                  .global(false)
+                  .build();
+          categories.add(category);
+          categories.add(category2);
+          categoryJpaRepository.saveAll(categories);
         };
-    }
-
-//    @Bean
-    @Order(value = 2)
-    public CommandLineRunner testingMethods(
-            CategoryJpaRepository categoryJpaRepository
-    ){
-        return args -> {
-            saveCategory(Category.builder()
-                    .name("blck")
-                    .categoryType("COLOR")
-//                    .products(null)
-                    .build());
-
-//            updateById(this.getAllByIdOrNameOrCategoryType(null, "blck", "COLOR")
-//                            .getFirst().getId(),
-//                    Category.builder().name("black").categoryType("COLOR").build());
-//
-//            deleteByIdOrNameOrCategoryType(null, "YELLOW", "COLOR");
-//            Long id  = 1L;
-
-//            System.out.println(getAllByIdOrNameOrCategoryType(id, null, null));
-        };
-    }
-
-    public Category getCategoryById(Long id){
-        return categoryJpaRepository.findById(id)
-                .orElseThrow(()-> new CategoryNotFoundException("Category with id: "+ id + " not found"));
     }
 
     //Saves a category if not already present. Otherwise returns the old.
-    public Category saveCategory(Category paramCategory){
-        Optional<Category> categoryOpt = categoryJpaRepository.findByNameAndCategoryType
-                (paramCategory.getName(), paramCategory.getCategoryType());
+    public Category saveCategory(Long storeId, Category paramCategory){
+        Store store = storeService.getById(storeId);
+        Optional<Category> categoryOpt = categoryJpaRepository.findByStoreAndNameAndCategoryType
+                (store, paramCategory.getName(), paramCategory.getCategoryType());
+        paramCategory.setStore(store);
+        paramCategory.setGlobal(false);
         return categoryOpt.orElseGet(() -> categoryJpaRepository.save(paramCategory));
     }
 
-    public List<Category> getAllByIdOrNameOrCategoryType(Long id, String paramName, String paramCategoryType){
-        List<Category> categories = categoryJpaRepository.findAll(dynamicFilterByParams(id, paramName, paramCategoryType));
-        return categories;
+    public List<Category> getAllByIdOrNameOrCategoryType(Long storeId, Long categoryId, String paramName, String paramCategoryType){
+        return categoryJpaRepository.findAll(dynamicFilterByParams(storeId, categoryId, paramName, paramCategoryType));
     }
 
-    public void deleteByIdOrNameOrCategoryType(Long id, String name, String categoryType){
-        categoryJpaRepository.delete(dynamicFilterByParams(id, name, categoryType));
+    public List<Category> getAllCategories() {
+        return categoryJpaRepository.findAll();
+    }
+
+    public List<Category> getAllGlobalCategories(){
+        return categoryJpaRepository.findAllByGlobal(true);
+    }
+
+    public List<Category> getAllByStoreIdAndGlobal(Long storeId, boolean global) {
+        Store store = storeService.getById(storeId);
+        if(global){
+            return categoryJpaRepository.findAllByStoreOrGlobal(store, true);
+        }
+        else return categoryJpaRepository.findAllByStore(store);
+    }
+
+    public Category getByCategoryId(Long storeId, Long categoryId){
+        Store store = storeService.getById(storeId);
+        Optional<Category> categoryOptional = categoryJpaRepository.findByIdAndStore(categoryId, store);
+        return categoryOptional.orElseThrow(()->
+                new CategoryNotFoundException("Category with id: " + categoryId + " does not exist!")
+        );
+    }
+
+    public List<Category> getAllCategoriesByNameOrCategoryType(Long storeId, String name, String categoryType) {
+        return categoryJpaRepository.findAll(dynamicFilterByParams(storeId, null, name, categoryType));
+    }
+
+    public List<Category> getAllCategoriesByProduct(Long storeId, Long productId){
+        Store store = storeService.getById(storeId);
+        Product product = productService.getByIdAndStore(productId, store);
+        return product.getCategories();
+    }
+
+    public void deleteByIdOrNameOrCategoryType(Long storeId, Long categoryId, String name, String categoryType){
+        categoryJpaRepository.delete(dynamicFilterByParams(storeId, categoryId, name, categoryType));
     }
 
 //    //refer to the pitfall no.3 of the article "6-performance-pitfalls-when-using-spring-data-jpa"
@@ -86,29 +119,34 @@ public class CategoryService {
 //    //Caution while using this method, as it can cause unwanted effects bcz each category is mapped with many products.
 //    //So change in the category value can cause issue with the data analysis.
     @Transactional
-    public Category updateCategory(Long id, Category paramCategory){
-        Category category = categoryJpaRepository.findById(id)
+    public Category updateCategory(Long storeId, Long id, Category paramCategory){
+        Store store = storeService.getById(storeId);
+
+        Category category = categoryJpaRepository.findByIdAndStore(id, store)
                 .orElseThrow(() -> new CategoryNotFoundException("Category with id: " + id + " does not exist."));
 
         //if any category exists with the same properties as passed in the new category the update will not occur.
-        Optional<Category> existCategory = categoryJpaRepository.findByNameAndCategoryType(paramCategory.getName(), paramCategory.getCategoryType());
+        Optional<Category> existCategory = categoryJpaRepository.findByStoreAndNameAndCategoryType(store, paramCategory.getName(), paramCategory.getCategoryType());
         if(existCategory.isPresent()){
             throw new CategoryAlreadyExist("Category with name:" + paramCategory.getName() +
                     " and categoryType: "+ paramCategory.getCategoryType() + " already exists with id: " + existCategory.get().getId()
                     );
         }
-
         category.setCategoryType(paramCategory.getCategoryType());
         category.setName(paramCategory.getName());
         return category;
     }
 
     //Used specifications to filter according to the availability of the conditions (id, name, type)
-    Specification<Category> dynamicFilterByParams(Long id, String name, String categoryType){
+    Specification<Category> dynamicFilterByParams(Long storeId, Long categoryId, String name, String categoryType){
         return (root, query, criteriaBuilder) -> {
           List<Predicate> predicates = new ArrayList<>();
-          if(id != null)
-              predicates.add(criteriaBuilder.equal(root.get("id"), id));
+          if(storeId != null){
+              Store store = storeService.getById(storeId);
+              predicates.add(criteriaBuilder.equal(root.get("store"), store));
+          }
+          if(categoryId != null)
+              predicates.add(criteriaBuilder.equal(root.get("id"), categoryId));
           if(name != null)
               predicates.add(criteriaBuilder.equal(root.get("name"), name));
           if(categoryType != null)

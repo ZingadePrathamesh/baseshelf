@@ -1,6 +1,7 @@
 package com.baseshelf.product;
 
 import com.baseshelf.category.Category;
+import com.baseshelf.store.Store;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -8,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ProductJpaRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
@@ -17,4 +19,5 @@ public interface ProductJpaRepository extends JpaRepository<Product, Long>, JpaS
             "(SELECT c FROM p.categories c WHERE c.categoryType = :categoryType)")
     List<Product> findAllWithoutCategoryType(@Param("categoryType") String categoryType);
 
+    Optional<Product> findByIdAndStore(Long productId, Store store);
 }

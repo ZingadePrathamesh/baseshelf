@@ -6,17 +6,14 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.time.LocalDate;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -59,7 +56,16 @@ public class StoreService {
                     .description("Store for testing")
                     .name("John Doe Clothing")
                     .build();
-            this.registerStore(store);
+            Store store2 = Store.builder()
+                    .email("smartit@gmail.com")
+                    .password("strongPassword")
+                    .description("Store for testing")
+                    .name("Smart IT Clothing")
+                    .build();
+            List<Store> stores = new ArrayList<>();
+            stores.add(store2);
+            stores.add(store);
+            storeRepository.saveAll(stores);
         };
     }
 
@@ -95,4 +101,8 @@ public class StoreService {
     }
 
 
+    public Store getByEmail(String email) {
+        return storeRepository.getStoreByEmail(email).orElseThrow(()->
+                new StoreNotFoundException("Store with email: "+ email+ " does not exists!"));
+    }
 }
