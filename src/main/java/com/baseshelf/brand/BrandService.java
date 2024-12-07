@@ -77,7 +77,8 @@ public class BrandService {
     }
 
     public Brand getBrandByProduct(Long storeId, Long productId) {
-        Product product = productService.getById(productId);
+        Store store = storeService.getById(storeId);
+        Product product = productService.getByIdAndStore(productId, store);
         Brand brand = product.getBrand();
         if(brand == null){
            throw new BrandNotFoundException("Brand does not exist for product id: " + productId);

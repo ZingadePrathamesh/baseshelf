@@ -2,30 +2,36 @@ package com.baseshelf.product;
 
 import com.baseshelf.brand.Brand;
 import com.baseshelf.category.Category;
+import com.baseshelf.order.ProductOrder;
 import com.baseshelf.store.Store;
-import com.baseshelf.utils.BaseEntity;
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-@EqualsAndHashCode(callSuper = true)
-@Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@SuperBuilder
-public class Product extends BaseEntity {
+public class ProductDto {
+    private Long id;
+
+    @Size(message = "Name should be between 2 to 30 characters", max = 30, min = 2)
+    @NotNull(message = "Name cannot be null.")
+    private String name;
+
+    @Column(updatable = false)
+    private LocalDate createdOn;
+
+    @Column(insertable = false)
+    private LocalDate lastModifiedOn;
 
     @Size(max = 500, message = "Description must not exceed 500 characters")
     private String description;
@@ -36,6 +42,10 @@ public class Product extends BaseEntity {
     @PositiveOrZero(message = "Cost Price cannot be negative")
     private Float costPrice;
 
+    private boolean isSold;
+
+    private LocalDate soldAt;
+
     private boolean isTaxed;
 
     @PositiveOrZero(message = "cgst cannot be negative")
@@ -44,30 +54,17 @@ public class Product extends BaseEntity {
     @PositiveOrZero(message = "sgst cannot be negative")
     private Float sgst;
 
-    @Column(unique = true, nullable = false)
-    @NotNull(message = "Barcode cannot be null.")
     private String barcode;
 
-    @Positive(message = "Product quantity should be greater than zero.")
-    @NotNull(message = "Product quantity cannot be null value.")
-    private Integer quantity;
-
-    @ManyToMany()
-    @JoinTable(
-            name = "product_categories",
-            joinColumns = @JoinColumn(name = "product_id"),
-            inverseJoinColumns = @JoinColumn(name = "category_id"),
-            indexes = {@Index(name = "categories", columnList = "category_id")}
-    )
     private List<Category> categories = new ArrayList<>();
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "store_id")
-    @JsonBackReference
     @NotNull(message = "Store cannot be null")
     private Store store;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "brand_id")
     private Brand brand;
+
+    private ProductOrder productOrder;
+
+    @Positive(message = "quantity cannot be zero or negative numbers.")
+    private Integer quantity;
 }

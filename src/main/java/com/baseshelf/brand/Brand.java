@@ -4,10 +4,8 @@ import com.baseshelf.product.Product;
 import com.baseshelf.store.Store;
 import com.baseshelf.utils.BaseEntity;
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -38,4 +36,5 @@ public class Brand extends BaseEntity {
     @JsonBackReference
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private List<Product> products;
+    
 }

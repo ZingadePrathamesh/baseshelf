@@ -3,6 +3,7 @@ package com.baseshelf.category;
 import com.baseshelf.product.Product;
 import com.baseshelf.store.Store;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -50,5 +51,6 @@ public class Category {
     @NotNull(message = "Store cannot be null")
     private Store store;
 
+    @JsonIgnore
     private boolean global;
 }
