@@ -6,22 +6,28 @@ import com.baseshelf.store.Store;
 import com.baseshelf.store.StoreService;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
 import net.datafaker.Faker;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.annotation.Order;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 
 import java.util.*;
 
 @Service
-@RequiredArgsConstructor
 public class CategoryService {
     private final CategoryJpaRepository categoryJpaRepository;
     private final StoreService storeService;
     private final ProductService productService;
+
+    public CategoryService(CategoryJpaRepository categoryJpaRepository, StoreService storeService,@Lazy ProductService productService) {
+        this.categoryJpaRepository = categoryJpaRepository;
+        this.storeService = storeService;
+        this.productService = productService;
+    }
 
     @Bean
     @Order(value = 3)
@@ -33,8 +39,10 @@ public class CategoryService {
           Store store1 = storeService.getByEmail("smartit@gmail.com");
           Faker faker = new Faker();
           Set<Category> categories = new HashSet<>();
+
+          //inserting colors
           for(int i = 0; i< 100;i ++){
-              Category  category = Category.builder()
+              Category category = Category.builder()
                       .global(true)
                       .store(store)
                       .categoryType("COLOR")
@@ -43,21 +51,42 @@ public class CategoryService {
               categories.add(category);
           }
 
-          //For johndoe clothing store
-          Category category = Category.builder()
-                  .name("Cotton")
-                  .categoryType("MATERIAL")
-                  .store(store)
-                  .global(false)
-                  .build();
-          Category category2 = Category.builder()
-                  .name("Linen")
-                  .categoryType("MATERIAL")
-                  .store(store1)
-                  .global(false)
-                  .build();
-          categories.add(category);
-          categories.add(category2);
+          //inserting materials
+          List<String> materials = List.of("Cotton", "Silk", "Linen", "Wool", "Polyester", "Denim", "Rug");
+          for(String m: materials){
+              Category category = Category.builder()
+                      .global(true)
+                      .store(store)
+                      .categoryType("MATERIAL")
+                      .name(m)
+                      .build();
+              categories.add(category);
+          }
+
+          //inserting product type
+          List<String> productTypes = List.of("Shirt", "Tshirt", "Jeans", "Pants", "Trousers", "Cargo", "Tracks", "Paijama");
+            for(String pT: productTypes){
+                Category category = Category.builder()
+                        .global(true)
+                        .store(store)
+                        .categoryType("PRODUCT TYPE")
+                        .name(pT)
+                        .build();
+                categories.add(category);
+            }
+
+            //inserting sizes
+            List<String> sizes = List.of("XXS", "XS", "S", "M", "L", "XL", "XXL");
+            for(String s: sizes){
+                Category category = Category.builder()
+                        .global(true)
+                        .store(store)
+                        .categoryType("SIZE")
+                        .name(s)
+                        .build();
+                categories.add(category);
+            }
+
           categoryJpaRepository.saveAll(categories);
         };
     }

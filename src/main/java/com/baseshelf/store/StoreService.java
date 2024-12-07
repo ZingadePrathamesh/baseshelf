@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -99,7 +100,6 @@ public class StoreService {
                 bindingResult
         );
     }
-
 
     public Store getByEmail(String email) {
         return storeRepository.getStoreByEmail(email).orElseThrow(()->

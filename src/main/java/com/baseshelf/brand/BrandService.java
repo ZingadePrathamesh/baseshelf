@@ -6,10 +6,10 @@ import com.baseshelf.store.Store;
 import com.baseshelf.store.StoreService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import net.datafaker.Faker;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,11 +19,17 @@ import java.time.LocalDate;
 import java.util.*;
 
 @Service
-@RequiredArgsConstructor
 public class BrandService {
     private final BrandRepository brandRepository;
     private final StoreService storeService;
     private final ProductService productService;
+
+    public BrandService(BrandRepository brandRepository, StoreService storeService, @Lazy ProductService productService) {
+        this.brandRepository = brandRepository;
+        this.storeService = storeService;
+        this.productService = productService;
+    }
+
     @Bean
     @Order(value = 2)
     public CommandLineRunner insertBrand(
@@ -32,7 +38,7 @@ public class BrandService {
         return args -> {
             Faker faker = new Faker();
             Set<Brand> brands = new HashSet<>();
-            Store store = storeService.getById(1L);
+            Store store = storeService.getByEmail("johndoe@gmail.com");
             for (int i = 0; i< 10; i++){
                 String name = faker.brand().watch();
                 Brand brand = Brand.builder()
@@ -45,10 +51,16 @@ public class BrandService {
             brandRepository.saveAll(brands);
         };
     }
-
     public List<Brand> getAllBrandsByStore(Long storeId) {
         Store store = storeService.getById(storeId);
        return brandRepository.findAllByStore(store);
+    }
+
+    public Brand getBrandByNameAndStore(Long storeId, String name){
+        Store store = storeService.getById(storeId);
+        Optional<Brand> brandOptional = brandRepository.findByStoreAndName(store, name);
+        return brandOptional.orElseThrow(()->
+                new BrandNotFoundException("Brand with name "+ name + " does not exists"));
     }
 
     public Brand registerBrand(Long storeId, Brand brand) {

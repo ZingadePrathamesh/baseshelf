@@ -21,6 +21,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(
+        indexes = {@Index(name = "category_type", columnList = "category_type")}
+)
 public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "category_seq")
@@ -31,7 +34,7 @@ public class Category {
     )
     private Long id;
 
-    @Size(message = "Name should be between 2 to 30 characters", max = 30, min = 2)
+    @Size(message = "Name should be between 1 to 30 characters", max = 30, min = 1)
     @NotNull(message = "Name cannot be null.")
     private String name;
 
