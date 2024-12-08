@@ -113,6 +113,14 @@ public class CategoryService {
         return categoryJpaRepository.findAllByGlobal(true);
     }
 
+    public Set<Category> getAllByStoreAndIdIn(Long storeId, List<Long> ids){
+        Set<Category> categories = new HashSet<>();
+        for(Long id: ids){
+            categories.add(this.getByCategoryId(storeId, id));
+        }
+        return categories;
+    }
+
     public List<Category> getAllByStoreIdAndGlobal(Long storeId, boolean global) {
         Store store = storeService.getById(storeId);
         if(global){

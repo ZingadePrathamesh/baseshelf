@@ -12,6 +12,7 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import net.datafaker.Faker;
 import org.springframework.boot.CommandLineRunner;
@@ -20,10 +21,8 @@ import org.springframework.core.annotation.Order;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.time.LocalDate;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -86,6 +85,13 @@ public class ProductService {
                 new ProductNotFoundException("Product with id: " + productId + " does not exist."));
     }
 
+    public Product getByIdAndStore(Long productId, Long storeId) {
+        Store store =  storeService.getById(storeId);
+        Optional<Product> productOptional = productJpaRepository.findByIdAndStore(productId, store);
+        return productOptional.orElseThrow(()->
+                new ProductNotFoundException("Product with id: " + productId + " does not exist."));
+    }
+
     public List<Product> getAllProductsFromStore(Long storeId){
         Store store =  storeService.getById(storeId);
         return productJpaRepository.findAllByStore(store);
@@ -96,6 +102,8 @@ public class ProductService {
         Brand brand = brandService.getBrandById(storeId, brandId);
         return productJpaRepository.findAllByStoreAndBrand(store, brand);
     }
+
+
 
     public List<Product> getAllProductsByCategories(Long storeId, List<Long> categoryIds){
         Store store = storeService.getById(storeId);
@@ -108,6 +116,52 @@ public class ProductService {
     public List<Product> getAllProductsByStoreAndFilter(Long storeId, ProductFilter productFilter) {
         Store store = storeService.getById(storeId);
         return productJpaRepository.findAll(dynamicProductFilter(storeId, productFilter));
+    }
+
+    public Product saveProduct(Long storeId, @Valid Product product) {
+        Store store = storeService.getById(storeId);
+        Brand brand = brandService.getBrandById(storeId, product.getBrand().getId());
+        List<Long> categoryIds = product.getCategories().stream()
+                .map(Category::getId)
+                .toList();
+        Set<Category> categories = categoryService.getAllByStoreAndIdIn(storeId, categoryIds);
+
+        product.setStore(store);
+        product.setBrand(brand);
+        product.setCategories(categories.stream().toList());
+
+        Product savedProduct = productJpaRepository.save(product);
+        return savedProduct;
+    }
+
+    @Transactional
+    public Product updateProductByStoreAndId(Long storeId, Long productId, @Valid Product product) {
+        Brand brand = brandService.getBrandById(storeId, product.getBrand().getId());
+        List<Long> categoryIds = product.getCategories().stream()
+                .map(Category::getId)
+                .toList();
+        Set<Category> categories = categoryService.getAllByStoreAndIdIn(storeId, categoryIds);
+
+        Product oldProduct = this.getByIdAndStore(productId, storeId);
+        oldProduct.setName(product.getName());
+        oldProduct.setDescription(product.getDescription());
+        oldProduct.setSellingPrice(product.getSellingPrice());
+        oldProduct.setCostPrice(product.getCostPrice());
+        oldProduct.setTaxed(product.isTaxed());
+        oldProduct.setCgst(product.getCgst());
+        oldProduct.setSgst(product.getSgst());
+        oldProduct.setBarcode(product.getBarcode());
+        oldProduct.setQuantity(product.getQuantity());
+        oldProduct.setCategories(categories.stream().toList());
+        oldProduct.setBrand(brand);
+        oldProduct.setActive(product.isActive());
+        oldProduct.setLastModifiedOn(LocalDate.now());
+        return oldProduct;
+    }
+
+    public void deleteById(Long storeId, List<Long> productIds){
+        Store store =  storeService.getById(storeId);
+        productJpaRepository.deleteByStoreAndIdIn(store, productIds);
     }
 
     Specification<Product> dynamicProductFilter(Long storeId, ProductFilter productFilter) {
@@ -183,8 +237,9 @@ public class ProductService {
 
                 predicates.add(root.get("id").in(subquery));
             }
-
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
     }
+
+
 }

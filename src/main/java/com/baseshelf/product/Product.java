@@ -57,7 +57,11 @@ public class Product extends BaseEntity {
             name = "product_categories",
             joinColumns = @JoinColumn(name = "product_id"),
             inverseJoinColumns = @JoinColumn(name = "category_id"),
-            indexes = {@Index(name = "categories", columnList = "category_id")}
+            indexes = {
+                    @Index(name = "idx_category_id", columnList = "category_id"),
+                    @Index(name = "idx_product_id", columnList = "product_id"),
+                    @Index(name = "idx_product_category", columnList = "product_id, category_id")
+            }
     )
     private List<Category> categories = new ArrayList<>();
 
