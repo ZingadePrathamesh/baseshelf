@@ -11,4 +11,11 @@ import java.util.List;
 @RequestMapping("stores/{store-id}/products")
 public class ProductController {
     private final ProductService productService;
+
+    @GetMapping("by-category")
+    public List<Product> getProductsByCategories(
+            @RequestBody List<Long> categoryId
+    ){
+        return productService.getAllProductsByCategories(categoryId);
+    }
 }

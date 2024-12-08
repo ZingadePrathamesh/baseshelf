@@ -14,8 +14,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -41,7 +43,34 @@ public class ProductService {
             List<Category> colors = categoryService.getAllByIdOrNameOrCategoryType(store.getId(), null, null, "COLOR");
             List<Category> productType = categoryService.getAllByIdOrNameOrCategoryType(store.getId(), null, null, "PRODUCT TYPE");
             List<Category> sizes = categoryService.getAllByIdOrNameOrCategoryType(store.getId(), null, null, "SIZE");
+            Set<Product> products = new HashSet<>();
 
+            for(int i =  0; i< 200; i++){
+                Category material = materials.get(faker.number().numberBetween(0, materials.size()));
+                Category color = colors.get(faker.number().numberBetween(0, colors.size()));
+                Category productT = productType.get(faker.number().numberBetween(0, productType.size()));
+                Category size = sizes.get(faker.number().numberBetween(0, sizes.size()));
+                List<Category> categories = List.of(material, color, productT, size);
+
+                Product product = Product.builder()
+                        .name(color.getName()+ " " + productT.getName())
+                        .description("Product with the size " + size.getName())
+                        .barcode("random barcode" + i)
+                        .categories(categories)
+                        .cgst(18.0F)
+                        .sgst(18.0F)
+                        .costPrice(150F)
+                        .sellingPrice(199F)
+                        .isTaxed(true)
+                        .quantity(faker.number().numberBetween(1, 100))
+                        .isActive(true)
+                        .brand(brand)
+                        .store(store)
+                        .build();
+                products.add(product);
+            }
+            productJpaRepository.saveAll(products);
+            System.out.println("All products have been saved.");
         };
     }
 
