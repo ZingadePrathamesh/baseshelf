@@ -39,8 +39,13 @@ public class BaseEntity {
     private boolean isActive;
 
     @PrePersist
-    public void setValues(){
+    public void setValuesPrePersist(){
         this.createdOn = LocalDate.now();
         this.isActive = true;
+    }
+
+    @PostPersist
+    public void setValuesPostPersist(){
+        this.lastModifiedOn = LocalDate.now();
     }
 }

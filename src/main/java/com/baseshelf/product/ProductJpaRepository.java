@@ -1,7 +1,6 @@
 package com.baseshelf.product;
 
 import com.baseshelf.brand.Brand;
-import com.baseshelf.category.Category;
 import com.baseshelf.store.Store;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -27,10 +26,12 @@ public interface ProductJpaRepository extends JpaRepository<Product, Long>, JpaS
 
     @Query("SELECT p FROM Product p " +
             "JOIN p.categories c " +
-            "WHERE c.id IN :categoryIds " +
+            "WHERE p.store = :store " +
+            "AND c.id IN :categoryIds " +
             "GROUP BY p.id " +
             "HAVING COUNT(c.id) = :categoryCount")
-    List<Product> findByAllCategoryIds(@Param("categoryIds") List<Long> categoryIds,
-                                       @Param("categoryCount") long categoryCount);
+    List<Product> findByAllCategoryIdsAndStore(@Param("store") Store store,
+                                               @Param("categoryIds") List<Long> categoryIds,
+                                               @Param("categoryCount") long categoryCount);
 
 }
