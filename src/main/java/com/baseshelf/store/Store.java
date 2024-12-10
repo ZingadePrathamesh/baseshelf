@@ -43,6 +43,12 @@ public class Store extends BaseEntity {
     @Size(max = 500, message = "Description must not exceed 500 characters")
     private String description;
 
+    @Size(max = 50, message = "Description must not exceed 60 characters")
+    private String address;
+
+    @Size(min= 15, max = 16, message = "GSTIN must be 15 characters")
+    private String gstinNumber;
+
     @OneToMany(mappedBy = "store", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
     @JsonManagedReference

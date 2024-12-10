@@ -66,7 +66,6 @@ public class ProductService {
                 Product product = Product.builder()
                         .name(color.getName()+ " " + productT.getName())
                         .description("Product with the size " + size.getName())
-                        .barcode("random barcode" + i)
                         .categories(categories)
                         .cgst(18.0F)
                         .sgst(18.0F)
@@ -122,6 +121,13 @@ public class ProductService {
         return productJpaRepository.findAll(dynamicProductFilter(storeId, productFilter));
     }
 
+    public List<Product> getAllProductsByStoreAndProductIds(Long storeId, List<Long> productIds){
+        Store store = storeService.getById(storeId);
+        return productIds.stream()
+                .map((id)->this.getByIdAndStore(id, store))
+                .toList();
+    }
+
     public Product saveProduct(Long storeId, @Valid Product product) {
         Store store = storeService.getById(storeId);
         Brand brand = brandService.getBrandById(storeId, product.getBrand().getId());
@@ -137,15 +143,9 @@ public class ProductService {
 
         // Save the product and generate the barcode
         Product savedProduct = productJpaRepository.save(product);
-        savedProduct.setBarcode(generateBarcode(savedProduct));
 
         // Save the updated product with the generated barcode
         return productJpaRepository.save(savedProduct);
-    }
-
-    private String generateBarcode(@Valid Product product) {
-        String barcode = product.getId() + product.getName();
-        return barcode;
     }
 
     @Transactional
@@ -164,7 +164,6 @@ public class ProductService {
         oldProduct.setTaxed(product.isTaxed());
         oldProduct.setCgst(product.getCgst());
         oldProduct.setSgst(product.getSgst());
-        oldProduct.setBarcode(product.getBarcode());
         oldProduct.setQuantity(product.getQuantity());
         oldProduct.setCategories(categories.stream().toList());
         oldProduct.setBrand(brand);

@@ -44,10 +44,6 @@ public class Product extends BaseEntity {
     @PositiveOrZero(message = "sgst cannot be negative")
     private Float sgst;
 
-    @Column(unique = true, nullable = false)
-    @NotNull(message = "Barcode cannot be null.")
-    private String barcode;
-
     @Positive(message = "Product quantity should be greater than zero.")
     @NotNull(message = "Product quantity cannot be null value.")
     private Integer quantity;

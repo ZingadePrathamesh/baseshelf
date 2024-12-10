@@ -56,12 +56,16 @@ public class StoreService {
                     .password("strongPassword")
                     .description("Store for testing")
                     .name("John Doe Clothing")
+                    .address("California")
+                    .gstinNumber("1234567890ABCDE")
                     .build();
             Store store2 = Store.builder()
                     .email("smartit@gmail.com")
                     .password("strongPassword")
                     .description("Store for testing")
                     .name("Smart IT Clothing")
+                    .address("California")
+                    .gstinNumber("1234567890ABCDE")
                     .build();
             List<Store> stores = new ArrayList<>();
             stores.add(store2);
