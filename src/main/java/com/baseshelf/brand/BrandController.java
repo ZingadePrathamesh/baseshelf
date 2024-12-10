@@ -1,6 +1,5 @@
 package com.baseshelf.brand;
 
-import com.baseshelf.store.Store;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

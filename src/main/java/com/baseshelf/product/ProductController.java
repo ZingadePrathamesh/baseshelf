@@ -2,6 +2,7 @@ package com.baseshelf.product;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -76,5 +77,14 @@ public class ProductController {
             @Valid @RequestBody Product product
     ){
         return productService.updateProductByStoreAndId(storeId, productId, product);
+    }
+
+    @PutMapping("{product-id}/sell")
+    public Product sellProduct(
+            @PathVariable(name = "store-id") Long storeId,
+            @PathVariable(name = "product-id") Long productId,
+            @RequestParam(required = true, name = "quantity") Integer quantity
+    ){
+        return productService.sellProductByProductId(storeId, productId, quantity);
     }
 }

@@ -4,6 +4,7 @@ import com.baseshelf.product.Product;
 import com.baseshelf.utils.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -29,4 +30,10 @@ public class OrderItem extends BaseEntity {
 
     @Positive(message = "Quantity should be greater than zero")
     private Integer quantity;
+
+    @PositiveOrZero(message = "Amount must be equal to or greater than zero")
+    private Float amount;
+
+    @PositiveOrZero(message = "GST must be equal to or greater than zero")
+    private Float gst;
 }

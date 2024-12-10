@@ -17,10 +17,16 @@ import lombok.RequiredArgsConstructor;
 import net.datafaker.Faker;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.Order;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.ObjectError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
+import java.lang.reflect.Method;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -103,8 +109,6 @@ public class ProductService {
         return productJpaRepository.findAllByStoreAndBrand(store, brand);
     }
 
-
-
     public List<Product> getAllProductsByCategories(Long storeId, List<Long> categoryIds){
         Store store = storeService.getById(storeId);
 
@@ -121,17 +125,27 @@ public class ProductService {
     public Product saveProduct(Long storeId, @Valid Product product) {
         Store store = storeService.getById(storeId);
         Brand brand = brandService.getBrandById(storeId, product.getBrand().getId());
-        List<Long> categoryIds = product.getCategories().stream()
+        List<Long> categoryIds = product.getCategories()
+                .stream()
                 .map(Category::getId)
                 .toList();
         Set<Category> categories = categoryService.getAllByStoreAndIdIn(storeId, categoryIds);
 
         product.setStore(store);
         product.setBrand(brand);
-        product.setCategories(categories.stream().toList());
+        product.setCategories(new ArrayList<>(categories)); // Convert Set to List
 
+        // Save the product and generate the barcode
         Product savedProduct = productJpaRepository.save(product);
-        return savedProduct;
+        savedProduct.setBarcode(generateBarcode(savedProduct));
+
+        // Save the updated product with the generated barcode
+        return productJpaRepository.save(savedProduct);
+    }
+
+    private String generateBarcode(@Valid Product product) {
+        String barcode = product.getId() + product.getName();
+        return barcode;
     }
 
     @Transactional
@@ -162,6 +176,26 @@ public class ProductService {
     public void deleteById(Long storeId, List<Long> productIds){
         Store store =  storeService.getById(storeId);
         productJpaRepository.deleteByStoreAndIdIn(store, productIds);
+    }
+
+    @Transactional
+    public Product sellProductByProductId(Long storeId, Long productId, Integer quantity){
+        Product product = getByIdAndStore(productId, storeId);
+        int newQuantity = product.getQuantity() - quantity;
+        if(newQuantity > 0){
+            product.setQuantity(newQuantity);
+            return product;
+        }
+        else{
+           throw new ProductQuantityExceedException("Provided quantity exceeds the available quantity by: " + Math.abs(newQuantity));
+        }
+    }
+
+    @Transactional
+    public Product restockProduct(Long storeId, Long productId, Integer quantity){
+        Product product = getByIdAndStore(productId, storeId);
+        product.setQuantity(product.getQuantity() + quantity);
+        return product;
     }
 
     Specification<Product> dynamicProductFilter(Long storeId, ProductFilter productFilter) {
@@ -240,6 +274,4 @@ public class ProductService {
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
     }
-
-
 }

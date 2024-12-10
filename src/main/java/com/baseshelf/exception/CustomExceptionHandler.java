@@ -4,6 +4,7 @@ import com.baseshelf.brand.BrandNotFoundException;
 import com.baseshelf.category.CategoryAlreadyExist;
 import com.baseshelf.category.CategoryNotFoundException;
 import com.baseshelf.product.ProductNotFoundException;
+import com.baseshelf.product.ProductQuantityExceedException;
 import com.baseshelf.store.StoreNotFoundException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -32,6 +33,16 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
                 LocalDateTime.now(), ex.getMessage(), request.getDescription(false)
         );
         return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler({ProductQuantityExceedException.class})
+    public final ResponseEntity<ErrorDetails> handleBadRequestException(
+            Exception ex, WebRequest request)
+    throws Exception{
+        ErrorDetails errorDetails = new ErrorDetails(
+                LocalDateTime.now(), ex.getMessage(), request.getDescription(false)
+        );
+        return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(CategoryAlreadyExist.class)
