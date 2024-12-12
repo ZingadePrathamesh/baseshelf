@@ -2,6 +2,7 @@ package com.baseshelf.order;
 
 import com.baseshelf.product.Product;
 import com.baseshelf.utils.BaseEntity;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -22,9 +23,10 @@ public class OrderItem extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "order_id")
+    @JsonBackReference
     private ProductOrder productOrder;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "product_id")
     private Product product;
 

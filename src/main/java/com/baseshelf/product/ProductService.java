@@ -29,6 +29,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import java.lang.reflect.Method;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -126,6 +128,60 @@ public class ProductService {
         return productIds.stream()
                 .map((id)->this.getByIdAndStore(id, store))
                 .toList();
+    }
+
+    public List<Product> getAllByStoreAndIds(Long storeId, Set<Long> productIds){
+        Store store = storeService.getById(storeId);
+        return productJpaRepository.findAllByStoreAndIdIn(store, productIds);
+    }
+
+    @Transactional
+    public Set<Product> validateProductsAndQuantity(Long storeId, Map<Long, Integer> productMap){
+        Store store =  storeService.getById(storeId);
+        List<Product> uncheckProducts = productJpaRepository.findAllByStoreAndIdIn(store, productMap.keySet());
+        Set<Product> checkedProducts = new HashSet<>();
+
+        Map<Long, Product> productMap1 = uncheckProducts.stream()
+                .collect(Collectors.toMap(Product::getId, Function.identity()));
+
+        for(Map.Entry<Long, Integer> pm : productMap.entrySet()){
+            Product product = productMap1.get(pm.getKey());
+
+            int newValue = product.getQuantity() - pm.getValue();
+
+            if(newValue < 0){
+               throw new ProductQuantityExceedException("Product with id: " + pm.getKey() + " exceeds in quantity by "+ Math.abs(value));
+           }
+           else{
+               product.setQuantity(newValue);
+               checkedProducts.add(product);
+               break;
+           }
+        }
+
+//        for(Map.Entry<Long, Integer> pm : productMap.entrySet()){
+//            boolean flag = false;
+//
+//           for(Product product: uncheckProducts){
+//               if(product.getId().equals(pm.getKey())){
+//                   flag = true;
+//                   int value = product.getQuantity() - pm.getValue();
+//                   if(value < 0){
+//                       throw new ProductQuantityExceedException("Product with id: " + pm.getKey() + " exceeds in quantity by "+ Math.abs(value));
+//                   }
+//                   else{
+//                       product.setQuantity(value);
+//                       checkedProducts.add(product);
+//                       break;
+//                   }
+//               }
+//           }
+//
+//           if(!flag){
+//               throw new ProductNotFoundException("product with id: " + pm.getKey() + " does not exist");
+//           }
+//        }
+        return checkedProducts;
     }
 
     public Product saveProduct(Long storeId, @Valid Product product) {

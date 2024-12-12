@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface ProductJpaRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
@@ -39,4 +40,5 @@ public interface ProductJpaRepository extends JpaRepository<Product, Long>, JpaS
     @Transactional
     @Modifying
     void deleteByStoreAndIdIn(Store store, List<Long> productIds);
+    List<Product> findAllByStoreAndIdIn(Store store, Set<Long> productIds);
 }

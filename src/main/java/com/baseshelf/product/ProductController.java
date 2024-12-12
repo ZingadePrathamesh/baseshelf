@@ -6,6 +6,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequiredArgsConstructor
@@ -41,9 +42,16 @@ public class ProductController {
             @PathVariable(name = "store-id") Long storeId,
             @ModelAttribute ProductFilter productFilter
     ){
-        System.out.println(productFilter.getName());
-        System.out.println(productFilter.getCategoryIds());
         return productService.getAllProductsByStoreAndFilter(storeId, productFilter);
+    }
+
+    @GetMapping("/multiple")
+    public List<Product> getProductsByIds(
+            @PathVariable(name = "store-id") Long storeId,
+            @RequestBody Set<Long> productIds
+    ){
+
+        return productService.getAllByStoreAndIds(storeId, productIds);
     }
 
     @GetMapping("products/{product-id}")

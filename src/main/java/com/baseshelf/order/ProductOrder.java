@@ -16,6 +16,7 @@ import lombok.experimental.SuperBuilder;
 
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Data
@@ -28,12 +29,12 @@ public class ProductOrder extends BaseEntity {
     @NotNull(message = "Order Time cannot be null.")
     private LocalTime orderTime;
 
-    @OneToMany(mappedBy = "productOrder", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "productOrder", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JsonManagedReference
     private List<OrderItem> orderItems;
 
     @PositiveOrZero(message = "Product Total Amount must be equal to or greater than zero")
-    private Float productTotalAmount;
+    private Float totalAmount;
 
     @PositiveOrZero(message = "Total GST must be equal to or greater than zero")
     private Float totalGst;

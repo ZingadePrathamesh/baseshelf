@@ -44,7 +44,7 @@ public class Product extends BaseEntity {
     @PositiveOrZero(message = "sgst cannot be negative")
     private Float sgst;
 
-    @Positive(message = "Product quantity should be greater than zero.")
+    @PositiveOrZero(message = "Product quantity should be greater than or equal to zero.")
     @NotNull(message = "Product quantity cannot be null value.")
     private Integer quantity;
 

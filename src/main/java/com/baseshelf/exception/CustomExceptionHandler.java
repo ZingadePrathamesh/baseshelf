@@ -3,6 +3,7 @@ package com.baseshelf.exception;
 import com.baseshelf.brand.BrandNotFoundException;
 import com.baseshelf.category.CategoryAlreadyExist;
 import com.baseshelf.category.CategoryNotFoundException;
+import com.baseshelf.order.OrderNotFoundException;
 import com.baseshelf.product.ProductNotFoundException;
 import com.baseshelf.product.ProductQuantityExceedException;
 import com.baseshelf.store.StoreNotFoundException;
@@ -25,7 +26,7 @@ import java.util.Map;
 public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler({CategoryNotFoundException.class, StoreNotFoundException.class,
-            BrandNotFoundException.class, ProductNotFoundException.class})
+            BrandNotFoundException.class, ProductNotFoundException.class, OrderNotFoundException.class})
     public final ResponseEntity<ErrorDetails> handleResourceNotFoundException(
             Exception ex, WebRequest request)
     throws Exception{
