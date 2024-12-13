@@ -33,6 +33,10 @@ public class ProductOrder extends BaseEntity {
     @JsonManagedReference
     private List<OrderItem> orderItems;
 
+    @NotNull(message = "Item count cannot be null.")
+    @PositiveOrZero(message = "Item count cannot be a negative number!")
+    private int itemCount;
+
     @PositiveOrZero(message = "Product Total Amount must be equal to or greater than zero")
     private Float totalAmount;
 

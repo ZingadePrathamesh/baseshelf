@@ -117,13 +117,6 @@ public class ProductService {
         return productJpaRepository.findAll(dynamicProductFilter(storeId, productFilter));
     }
 
-    public List<Product> getAllProductsByStoreAndProductIds(Long storeId, List<Long> productIds){
-        Store store = storeService.getById(storeId);
-        return productIds.stream()
-                .map((id)->this.getByIdAndStore(id, store))
-                .toList();
-    }
-
     public List<Product> getAllByStoreAndIds(Long storeId, Set<Long> productIds){
         Store store = storeService.getById(storeId);
         return productJpaRepository.findAllByStoreAndIdIn(store, productIds);

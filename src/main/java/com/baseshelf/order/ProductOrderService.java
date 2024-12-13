@@ -4,12 +4,15 @@ import com.baseshelf.product.Product;
 import com.baseshelf.product.ProductService;
 import com.baseshelf.store.Store;
 import com.baseshelf.store.StoreService;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.annotation.Order;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
@@ -52,6 +55,7 @@ public class ProductOrderService {
         Store store = storeService.getById(storeId);
         float totalAmount= 0.0f;
         float totalGst = 0.0f;
+        int itemCount = 0;
 
         Set<Product> products = productService.validateProductsAndQuantity(storeId, productMap);
 
@@ -71,6 +75,7 @@ public class ProductOrderService {
 
             totalAmount += amount;
             totalGst += gst;
+            itemCount += quantity;
 
             orderItems.add(OrderItem.builder()
                     .name(product.getName() + " " + quantity)
@@ -84,6 +89,7 @@ public class ProductOrderService {
 
         productOrder.setTotalAmount(totalAmount);
         productOrder.setTotalGst(totalGst);
+        productOrder.setItemCount(itemCount);
         productOrder.setOrderItems(new ArrayList<>(orderItems));
 
         productOrder = productOrderRepository.save(productOrder);
@@ -100,5 +106,79 @@ public class ProductOrderService {
     public List<ProductOrderResponse> getAllByStore(Long storeId) {
         Store store = storeService.getById(storeId);
         return productOrderRepository.findAllByStore(store);
+    }
+
+    public List<ProductOrderResponseDto> getAllByStoreAndFilter(Long storeId, ProductOrderFilter filter) {
+        Specification<ProductOrder> specification = dynamicFilter(storeId, filter);
+        List<ProductOrder> productOrders =  productOrderRepository.findAll(specification);
+        return productOrders.stream()
+                .map(this::productOrderResponseMapper)
+                .toList();
+    }
+
+    private ProductOrderResponseDto productOrderResponseMapper(ProductOrder productOrder) {
+        return ProductOrderResponseDto.builder()
+                .id(productOrder.getId())
+                .orderTime(productOrder.getOrderTime())
+                .createdOn(productOrder.getCreatedOn())
+                .totalGst(productOrder.getTotalGst())
+                .totalAmount(productOrder.getTotalAmount())
+                .itemCount(productOrder.getItemCount())
+                .orderItems(
+                        productOrder.getOrderItems().stream().map(this::orderItemResponseMapper).toList()
+                )
+                .store(StoreResponse.builder()
+                        .gstinNumber(productOrder.getStore().getGstinNumber())
+                        .description(productOrder.getStore().getDescription())
+                        .name(productOrder.getStore().getName())
+                        .build()
+                )
+                .build();
+    }
+
+    public OrderItemResponse orderItemResponseMapper(OrderItem orderItem){
+        return OrderItemResponse.builder()
+                .id(orderItem.getId())
+                .gst(orderItem.getGst())
+                .amount(orderItem.getAmount())
+                .quantity(orderItem.getQuantity())
+                .product(ProductResponse.builder()
+                        .id(orderItem.getProduct().getId())
+                        .cgst(orderItem.getProduct().getCgst())
+                        .sgst(orderItem.getProduct().getSgst())
+                        .sellingPrice(orderItem.getProduct().getSellingPrice())
+                        .build())
+                .build();
+    }
+
+
+    Specification<ProductOrder> dynamicFilter(Long storeId, ProductOrderFilter filter){
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            Store store = storeService.getById(storeId);
+            predicates.add(criteriaBuilder.equal(root.get("store"), store));
+
+            if(filter.from() != null){
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("createdOn"), filter.from()));
+            }
+            if(filter.to() != null){
+                predicates.add(criteriaBuilder.lessThan(root.get("createdOn"), filter.to()));
+            }
+            if(filter.greaterThanAmount() != null){
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("totalAmount"), filter.greaterThanAmount()));
+            }
+            if(filter.lessThanAmount() != null){
+                predicates.add(criteriaBuilder.lessThan(root.get("totalAmount"), filter.lessThanAmount()));
+            }
+            if(filter.greaterThanItem() != null){
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("itemCount"), filter.greaterThanItem()));
+            }
+            if(filter.lessThanItem() != null){
+                predicates.add(criteriaBuilder.lessThan(root.get("itemCount"), filter.lessThanItem()));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
     }
 }

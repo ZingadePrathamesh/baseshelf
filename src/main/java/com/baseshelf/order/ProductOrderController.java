@@ -18,6 +18,15 @@ public class ProductOrderController {
         return productOrderService.getAllByStore(storeId);
     }
 
+    @GetMapping("/filters")
+    public List<ProductOrderResponseDto> getAllOrdersByStoreAndFilter(
+            @PathVariable(name = "store-id") Long storeId,
+            @ModelAttribute ProductOrderFilter filter
+    ){
+        System.out.println(filter.toString());
+        return productOrderService.getAllByStoreAndFilter(storeId, filter);
+    }
+
     @PostMapping("/lists")
     public ProductOrderResponse createOrderByList(
             @PathVariable(name = "store-id") Long storeId,
