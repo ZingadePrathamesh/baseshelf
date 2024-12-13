@@ -35,12 +35,23 @@ public class ProductOrderService {
     }
 
     public ProductOrderResponse createOrderByIds(Long storeId, List<Long> productIds){
+        Map<Long, Integer> productMap = new HashMap<>();
+        productIds.forEach((id)-> productMap.merge(id, 1, Integer::sum));
+        return createOrderByProductMap(storeId, productMap);
+    }
+
+    public ProductOrderResponse createOrderByRequest(Long storeId, List<OrderRequest> orderRequests){
+        Map<Long, Integer> productMap = new HashMap<>();
+        for(OrderRequest or: orderRequests){
+            productMap.merge(or.getProductId(), or.getQuantity(), Integer::sum);
+        }
+        return createOrderByProductMap(storeId, productMap);
+    }
+
+    public ProductOrderResponse createOrderByProductMap(Long storeId, Map<Long, Integer> productMap){
         Store store = storeService.getById(storeId);
         float totalAmount= 0.0f;
         float totalGst = 0.0f;
-
-        Map<Long, Integer> productMap = new HashMap<>();
-        productIds.forEach((id)-> productMap.merge(id, 1, Integer::sum));
 
         Set<Product> products = productService.validateProductsAndQuantity(storeId, productMap);
 

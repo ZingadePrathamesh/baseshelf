@@ -1,7 +1,6 @@
 package com.baseshelf.order;
 
 import lombok.RequiredArgsConstructor;
-import org.aspectj.weaver.ast.Or;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,11 +18,19 @@ public class ProductOrderController {
         return productOrderService.getAllByStore(storeId);
     }
 
-    @PostMapping("")
-    public ProductOrderResponse createOrder(
+    @PostMapping("/lists")
+    public ProductOrderResponse createOrderByList(
             @PathVariable(name = "store-id") Long storeId,
             @RequestBody List<Long> productIds
             ){
         return productOrderService.createOrderByIds(storeId, productIds);
+    }
+
+    @PostMapping("/body")
+    public ProductOrderResponse createOrderByRequest(
+            @PathVariable(name = "store-id") Long storeId,
+            @RequestBody List<OrderRequest> orderRequests
+            ){
+        return productOrderService.createOrderByRequest(storeId, orderRequests);
     }
 }

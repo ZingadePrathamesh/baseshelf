@@ -17,16 +17,10 @@ import lombok.RequiredArgsConstructor;
 import net.datafaker.Faker;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.Order;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.BeanPropertyBindingResult;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.ObjectError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 
-import java.lang.reflect.Method;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.function.Function;
@@ -160,29 +154,6 @@ public class ProductService {
                checkedProducts.add(product);
            }
         }
-
-//        for(Map.Entry<Long, Integer> pm : productMap.entrySet()){
-//            boolean flag = false;
-//
-//           for(Product product: uncheckProducts){
-//               if(product.getId().equals(pm.getKey())){
-//                   flag = true;
-//                   int value = product.getQuantity() - pm.getValue();
-//                   if(value < 0){
-//                       throw new ProductQuantityExceedException("Product with id: " + pm.getKey() + " exceeds in quantity by "+ Math.abs(value));
-//                   }
-//                   else{
-//                       product.setQuantity(value);
-//                       checkedProducts.add(product);
-//                       break;
-//                   }
-//               }
-//           }
-//
-//           if(!flag){
-//               throw new ProductNotFoundException("product with id: " + pm.getKey() + " does not exist");
-//           }
-//        }
         return checkedProducts;
     }
 
