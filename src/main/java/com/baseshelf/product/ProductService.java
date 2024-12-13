@@ -147,15 +147,17 @@ public class ProductService {
         for(Map.Entry<Long, Integer> pm : productMap.entrySet()){
             Product product = productMap1.get(pm.getKey());
 
-            int newValue = product.getQuantity() - pm.getValue();
+            if(product == null){
+                throw new ProductNotFoundException("product with id: " + pm.getKey() + " does not exist");
+            }
 
+            int newValue = product.getQuantity() - pm.getValue();
             if(newValue < 0){
-               throw new ProductQuantityExceedException("Product with id: " + pm.getKey() + " exceeds in quantity by "+ Math.abs(value));
+               throw new ProductQuantityExceedException("Product with id: " + pm.getKey() + " exceeds in quantity by "+ Math.abs(newValue));
            }
            else{
                product.setQuantity(newValue);
                checkedProducts.add(product);
-               break;
            }
         }
 
