@@ -5,7 +5,6 @@ import com.baseshelf.utils.BaseEntity;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
@@ -16,7 +15,6 @@ import lombok.experimental.SuperBuilder;
 
 import java.time.LocalTime;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 @Data

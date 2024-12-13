@@ -6,13 +6,9 @@ import com.baseshelf.store.Store;
 import com.baseshelf.store.StoreService;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Bean;
-import org.springframework.core.annotation.Order;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
@@ -21,29 +17,16 @@ import java.util.*;
 @RequiredArgsConstructor
 public class ProductOrderService {
     private final ProductOrderRepository productOrderRepository;
-    private final OrderItemRepository orderItemRepository;
     private final ProductService productService;
     private final StoreService storeService;
 
-    @Bean
-    @Order(value = 5)
-    public CommandLineRunner insertOrder(
-        ProductOrderRepository productOrderRepository,
-        OrderItemRepository orderItemRepository,
-        ProductService productService,
-        StoreService storeService
-    ){
-        return args -> {
-        };
-    }
-
-    public ProductOrderResponse createOrderByIds(Long storeId, List<Long> productIds){
+    public ProductOrderResponseDto createOrderByIds(Long storeId, List<Long> productIds){
         Map<Long, Integer> productMap = new HashMap<>();
         productIds.forEach((id)-> productMap.merge(id, 1, Integer::sum));
         return createOrderByProductMap(storeId, productMap);
     }
 
-    public ProductOrderResponse createOrderByRequest(Long storeId, List<OrderRequest> orderRequests){
+    public ProductOrderResponseDto createOrderByRequest(Long storeId, List<OrderRequest> orderRequests){
         Map<Long, Integer> productMap = new HashMap<>();
         for(OrderRequest or: orderRequests){
             productMap.merge(or.getProductId(), or.getQuantity(), Integer::sum);
@@ -51,7 +34,7 @@ public class ProductOrderService {
         return createOrderByProductMap(storeId, productMap);
     }
 
-    public ProductOrderResponse createOrderByProductMap(Long storeId, Map<Long, Integer> productMap){
+    public ProductOrderResponseDto createOrderByProductMap(Long storeId, Map<Long, Integer> productMap){
         Store store = storeService.getById(storeId);
         float totalAmount= 0.0f;
         float totalGst = 0.0f;
@@ -97,10 +80,11 @@ public class ProductOrderService {
         return this.getById(storeId, productOrder.getId());
     }
 
-    public ProductOrderResponse getById(Long storeId, Long orderId){
+    public ProductOrderResponseDto getById(Long storeId, Long orderId){
         Store store = storeService.getById(storeId);
-        return productOrderRepository.findResponseByStoreAndId(store, orderId)
-                .orElseThrow(()-> new OrderNotFoundException("Order with id: " + orderId +  "do not exist!"));
+        Optional<ProductOrder> productOrderOptional = productOrderRepository.findByStoreAndId(store,orderId);
+        return this.productOrderResponseMapper(productOrderOptional
+                .orElseThrow(()-> new OrderNotFoundException("Order with id: " + orderId +  "do not exist!")));
     }
 
     public List<ProductOrderResponse> getAllByStore(Long storeId) {
@@ -114,6 +98,11 @@ public class ProductOrderService {
         return productOrders.stream()
                 .map(this::productOrderResponseMapper)
                 .toList();
+    }
+
+    public void deleteByStoreAndId(Long storeId, Long orderId){
+        Store store = storeService.getById(storeId);
+        productOrderRepository.deleteByStoreAndId(store, orderId);
     }
 
     private ProductOrderResponseDto productOrderResponseMapper(ProductOrder productOrder) {
@@ -150,7 +139,6 @@ public class ProductOrderService {
                         .build())
                 .build();
     }
-
 
     Specification<ProductOrder> dynamicFilter(Long storeId, ProductOrderFilter filter){
         return (root, query, criteriaBuilder) -> {

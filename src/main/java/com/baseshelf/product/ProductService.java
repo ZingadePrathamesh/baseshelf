@@ -108,8 +108,7 @@ public class ProductService {
         Store store = storeService.getById(storeId);
 
         long categoryCount = (long) categoryIds.size();
-        List<Product> products = productJpaRepository.findByAllCategoryIdsAndStore(store, categoryIds, categoryCount);
-        return products;
+        return productJpaRepository.findByAllCategoryIdsAndStore(store, categoryIds, categoryCount);
     }
 
     public List<Product> getAllProductsByStoreAndFilter(Long storeId, ProductFilter productFilter) {
@@ -197,19 +196,6 @@ public class ProductService {
     public void deleteById(Long storeId, List<Long> productIds){
         Store store =  storeService.getById(storeId);
         productJpaRepository.deleteByStoreAndIdIn(store, productIds);
-    }
-
-    @Transactional
-    public Product sellProductByProductId(Long storeId, Long productId, Integer quantity){
-        Product product = getByIdAndStore(productId, storeId);
-        int newQuantity = product.getQuantity() - quantity;
-        if(newQuantity > 0){
-            product.setQuantity(newQuantity);
-            return product;
-        }
-        else{
-           throw new ProductQuantityExceedException("Provided quantity exceeds the available quantity by: " + Math.abs(newQuantity));
-        }
     }
 
     @Transactional

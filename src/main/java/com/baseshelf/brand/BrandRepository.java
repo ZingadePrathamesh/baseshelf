@@ -1,6 +1,5 @@
 package com.baseshelf.brand;
 
-import com.baseshelf.product.Product;
 import com.baseshelf.store.Store;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;

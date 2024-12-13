@@ -28,7 +28,7 @@ public class ProductOrderController {
     }
 
     @PostMapping("/lists")
-    public ProductOrderResponse createOrderByList(
+    public ProductOrderResponseDto createOrderByList(
             @PathVariable(name = "store-id") Long storeId,
             @RequestBody List<Long> productIds
             ){
@@ -36,10 +36,18 @@ public class ProductOrderController {
     }
 
     @PostMapping("/body")
-    public ProductOrderResponse createOrderByRequest(
+    public ProductOrderResponseDto createOrderByRequest(
             @PathVariable(name = "store-id") Long storeId,
             @RequestBody List<OrderRequest> orderRequests
             ){
         return productOrderService.createOrderByRequest(storeId, orderRequests);
+    }
+
+    @DeleteMapping("/{order-id}")
+    public void deleteByStoreAndId(
+            @PathVariable(name = "store-id") Long storeId,
+            @PathVariable(name = "order-id") Long orderId
+    ){
+        productOrderService.deleteByStoreAndId(storeId, orderId);
     }
 }
