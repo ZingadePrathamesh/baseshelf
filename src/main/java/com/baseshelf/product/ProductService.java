@@ -1,6 +1,7 @@
 package com.baseshelf.product;
 
 import com.baseshelf.barcode.BarcodeService;
+import com.baseshelf.barcode.CustomBarcodeException;
 import com.baseshelf.brand.Brand;
 import com.baseshelf.brand.BrandService;
 import com.baseshelf.category.Category;
@@ -16,13 +17,23 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import net.datafaker.Faker;
+import net.sourceforge.barbecue.BarcodeException;
+import net.sourceforge.barbecue.output.OutputException;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.annotation.Order;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.function.Function;
@@ -61,6 +72,8 @@ public class ProductService {
                 Category productT = productType.get(faker.number().numberBetween(0, productType.size()));
                 Category size = sizes.get(faker.number().numberBetween(0, sizes.size()));
                 List<Category> categories = List.of(material, color, productT, size);
+                float costPrize = faker.number().numberBetween(150, 10000);
+                float sellingPrize = costPrize + costPrize * 40 / 100 ;
 
                 Product product = Product.builder()
                         .name(color.getName()+ " " + productT.getName())
@@ -68,8 +81,8 @@ public class ProductService {
                         .categories(categories)
                         .cgst(18.0F)
                         .sgst(18.0F)
-                        .costPrice(150F)
-                        .sellingPrice(199F)
+                        .costPrice(costPrize)
+                        .sellingPrice(sellingPrize)
                         .isTaxed(true)
                         .quantity(faker.number().numberBetween(1, 100))
                         .isActive(true)
@@ -171,12 +184,36 @@ public class ProductService {
         // Save the updated product with the generated barcode
         return productJpaRepository.save(savedProduct);
     }
-//
-//    public File getBarcodeForProduct(Long storeId, Long productId){
-//        Product product = this.getByIdAndStore(productId, storeId);
-//        File responseFile = new File("")
-//        File file = barcodeService.createBarcodeImage(product.getId(), );
-//    }
+
+    public ResponseEntity<byte[]> getBarcodeForProduct(Long storeId, Long productId) throws OutputException, BarcodeException, IOException {
+        Product product = this.getByIdAndStore(productId, storeId);
+        BufferedImage bufferedImage = barcodeService.generateCode128BarcodeImage(product.getId().toString());
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        ImageIO.write(bufferedImage, "png", outputStream);
+        byte[] imageBytes = outputStream.toByteArray();
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.IMAGE_PNG);
+        httpHeaders.setContentLength(imageBytes.length);
+
+        return new ResponseEntity<byte[]>(imageBytes, httpHeaders, HttpStatus.OK);
+    }
+
+    public ResponseEntity<byte[]> getProductLabel(Long storeId, Long productId) throws OutputException, BarcodeException, IOException {
+        Product product = getByIdAndStore(productId, storeId);
+        BufferedImage image = barcodeService.createProductLabel(product);
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        ImageIO.write(image, "png", outputStream);
+        byte[] imageBytes = outputStream.toByteArray();
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.IMAGE_PNG);
+        httpHeaders.setContentLength(imageBytes.length);
+
+        return new ResponseEntity<>(imageBytes, httpHeaders, HttpStatus.OK);
+    }
 
     @Transactional
     public Product updateProductByStoreAndId(Long storeId, Long productId, @Valid Product product) {

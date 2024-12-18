@@ -1,37 +1,22 @@
 package com.baseshelf.barcode;
 
+import com.baseshelf.product.Product;
 import lombok.RequiredArgsConstructor;
 import net.sourceforge.barbecue.Barcode;
+import net.sourceforge.barbecue.BarcodeException;
 import net.sourceforge.barbecue.BarcodeFactory;
 import net.sourceforge.barbecue.BarcodeImageHandler;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Bean;
-import org.springframework.core.annotation.Order;
+import net.sourceforge.barbecue.output.OutputException;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
 @Service
 @RequiredArgsConstructor
 public class BarcodeService {
-
-    @Bean
-    @Order(value = 8)
-    public CommandLineRunner generateBarcode(){
-        return args -> {
-            String barcodeText = "6jdhvjkadjva9"; // Example barcode value
-            File outputFile = new File("EAN13Barcode.png");
-
-            try {
-                createBarcodeImage(barcodeText, outputFile);
-                System.out.println("Barcode image successfully created: " + outputFile.getAbsolutePath());
-            } catch (Exception e) {
-                System.err.println("Error while generating barcode: " + e.getMessage());
-            }
-        };
-    }
 
     /**
      * Generate a barcode PNG image and save it to a file.
@@ -47,30 +32,43 @@ public class BarcodeService {
         }
         ImageIO.write(barcodeImage, "png", outputFile);
     }
-//
-    public BufferedImage generateCode128BarcodeImage(String barcodeText) throws Exception {
+
+    public BufferedImage generateCode128BarcodeImage(String barcodeText) throws BarcodeException, OutputException {
         Barcode barcode = BarcodeFactory.createCode128(barcodeText);
         return BarcodeImageHandler.getImage(barcode);
     }
 
-//    /**
-//     * Generate a BufferedImage for an EAN-13 barcode.
-//     *
-//     * @param barcodeText The text to encode as an EAN-13 barcode.
-//     * @return A BufferedImage representing the barcode.
-//     * @throws Exception If there is an error during barcode generation.
-//     */
-//    public static BufferedImage generateEAN13BarcodeImage(String barcodeText) throws Exception {
-//        if (barcodeText.length() != 13 || !barcodeText.matches("\\d+")) {
-//            throw new IllegalArgumentException("Barcode must be a 13-digit number.");
-//        }
-//
-//        EAN13Bean barcodeGenerator = new EAN13Bean();
-//        BitmapCanvasProvider canvas = new BitmapCanvasProvider(
-//                300, BufferedImage.TYPE_BYTE_BINARY, false, 0);
-//
-//        barcodeGenerator.generateBarcode(canvas, barcodeText);
-//        canvas.finish();
-//        return canvas.getBufferedImage();
-//    }
+    public BufferedImage createProductLabel(Product product) throws BarcodeException, OutputException {
+        int labelWidth = 240;
+        int lableHeight = 120;
+
+        BufferedImage bufferedImage = new BufferedImage(labelWidth, lableHeight, BufferedImage.TYPE_INT_RGB);
+
+        Graphics2D graphics2D = bufferedImage.createGraphics();
+        graphics2D.setBackground(Color.white);
+        graphics2D.fillRect(0, 0, labelWidth, lableHeight);
+
+        // Draw the product name
+        graphics2D.setColor(Color.BLACK);
+        graphics2D.setFont(new Font("Arial", Font.BOLD, 14));
+        graphics2D.drawString("Product: " + product.getName(), 20, 20);
+
+        // Draw the price
+        graphics2D.setFont(new Font("Arial", Font.PLAIN, 12));
+        graphics2D.drawString("Price: $" + product.getSellingPrice(), 20, 40);
+
+        //Draw the brand
+        graphics2D.setFont(new Font("Arial", Font.PLAIN, 12));
+        graphics2D.drawString("Brand: " + product.getBrand().getName(), 20, 60);
+
+        int x = labelWidth/2 -  150/2;
+        // Generate and draw the barcode
+        BufferedImage barcodeImage = generateCode128BarcodeImage(product.getId().toString());
+        graphics2D.drawImage(barcodeImage, x, 80, 150 , 30 ,null);
+
+        // Clean up
+        graphics2D.dispose();
+
+        return bufferedImage;
+    }
 }

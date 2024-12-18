@@ -2,8 +2,12 @@ package com.baseshelf.product;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import net.sourceforge.barbecue.BarcodeException;
+import net.sourceforge.barbecue.output.OutputException;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
@@ -53,12 +57,28 @@ public class ProductController {
         return productService.getAllByStoreAndIds(storeId, productIds);
     }
 
-    @GetMapping("products/{product-id}")
+    @GetMapping("/{product-id}")
     public Product getProductByStoreAndId(
             @PathVariable(name = "store-id") Long storeId,
             @PathVariable(name = "product-id") Long productId
     ){
         return productService.getByIdAndStore(productId, storeId);
+    }
+
+    @GetMapping("/{product-id}/barcode")
+    public ResponseEntity<byte[]> getProductBarCodeById(
+            @PathVariable(name = "store-id") Long storeId,
+            @PathVariable(name = "product-id") Long productId
+    ) throws OutputException, BarcodeException, IOException {
+        return productService.getBarcodeForProduct(storeId, productId);
+    }
+
+    @GetMapping("/{product-id}/label")
+    public ResponseEntity<byte[]> getProductLabelById(
+            @PathVariable(name = "store-id") Long storeId,
+            @PathVariable(name = "product-id") Long productId
+    ) throws OutputException, BarcodeException, IOException {
+        return productService.getProductLabel(storeId, productId);
     }
 
     @PostMapping("")
