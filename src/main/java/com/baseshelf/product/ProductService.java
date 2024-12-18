@@ -1,5 +1,6 @@
 package com.baseshelf.product;
 
+import com.baseshelf.barcode.BarcodeService;
 import com.baseshelf.brand.Brand;
 import com.baseshelf.brand.BrandService;
 import com.baseshelf.category.Category;
@@ -21,6 +22,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.function.Function;
@@ -33,6 +35,7 @@ public class ProductService {
     private final StoreService storeService;
     private final BrandService brandService;
     private final CategoryService categoryService;
+    private final BarcodeService barcodeService;
 
     @Bean
     @Order(value = 4)
@@ -168,6 +171,12 @@ public class ProductService {
         // Save the updated product with the generated barcode
         return productJpaRepository.save(savedProduct);
     }
+//
+//    public File getBarcodeForProduct(Long storeId, Long productId){
+//        Product product = this.getByIdAndStore(productId, storeId);
+//        File responseFile = new File("")
+//        File file = barcodeService.createBarcodeImage(product.getId(), );
+//    }
 
     @Transactional
     public Product updateProductByStoreAndId(Long storeId, Long productId, @Valid Product product) {
