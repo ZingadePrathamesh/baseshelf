@@ -6,6 +6,7 @@ import net.sourceforge.barbecue.BarcodeException;
 import net.sourceforge.barbecue.output.OutputException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.io.IOException;
 import java.util.List;
@@ -79,6 +80,14 @@ public class ProductController {
             @PathVariable(name = "product-id") Long productId
     ) throws OutputException, BarcodeException, IOException {
         return productService.getProductLabel(storeId, productId);
+    }
+
+    @GetMapping("/{product-id}/label-stream")
+    public ResponseEntity<StreamingResponseBody> getProductLabelStreamById(
+            @PathVariable(name = "store-id") Long storeId,
+            @PathVariable(name = "product-id") Long productId
+    ) throws OutputException, BarcodeException, IOException {
+        return productService.getProductLabelStream(storeId, productId);
     }
 
     @PostMapping("")

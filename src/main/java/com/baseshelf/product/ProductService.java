@@ -28,12 +28,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.function.Function;
@@ -213,6 +215,21 @@ public class ProductService {
         httpHeaders.setContentLength(imageBytes.length);
 
         return new ResponseEntity<>(imageBytes, httpHeaders, HttpStatus.OK);
+    }
+
+    public ResponseEntity<StreamingResponseBody> getProductLabelStream(Long storeId, Long productId) throws OutputException, BarcodeException, IOException {
+        Product product = getByIdAndStore(productId, storeId);
+        BufferedImage image = barcodeService.createProductLabel(product);
+
+        StreamingResponseBody streamingResponseBody = outputStream -> {
+            ImageIO.write(image, "png", outputStream);
+            outputStream.flush();
+        };
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.IMAGE_PNG);
+
+        return new ResponseEntity<>(streamingResponseBody, httpHeaders, HttpStatus.OK);
     }
 
     @Transactional
