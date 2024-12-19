@@ -1,17 +1,24 @@
 package com.baseshelf.order;
 
+import com.baseshelf.analytics.RevenueMonthDto;
 import com.baseshelf.product.Product;
 import com.baseshelf.product.ProductService;
 import com.baseshelf.store.Store;
 import com.baseshelf.store.StoreService;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
+import net.datafaker.Faker;
+import org.springframework.cglib.core.Local;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -168,5 +175,42 @@ public class ProductOrderService {
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
+    }
+
+    public Double getRevenueByDate(Long storeId, LocalDate date) {
+        ProductOrderFilter filter = new ProductOrderFilter(date, date.plusDays(1L), null, null, null, null);
+        List<ProductOrderResponseDto> productOrders = this.getAllByStoreAndFilter(storeId, filter);
+        Double totalRevenue = 0.0;
+        for(ProductOrderResponseDto product: productOrders){
+            totalRevenue += product.getTotalAmount();
+        }
+        return totalRevenue;
+    }
+
+    public Map<LocalDate, Double> getRevenueByDateRange(Long storeId, LocalDate from, LocalDate to) {
+        Store store = storeService.getById(storeId);
+        List<LocalDate> dates = new ArrayList<>();
+        while(from.isBefore(to) || from.equals(to)){
+            dates.add(from);
+            from = from.plusDays(1);
+        }
+        System.out.println(dates);
+        List<Object[]> results =  productOrderRepository.findRevenueByDateRange(store, dates);
+        return results.stream()
+                .collect(Collectors.toMap(
+                        result -> (LocalDate) result[0],
+                        result -> (Double) result[1]
+                ));
+    }
+
+    public List<RevenueMonthDto> getRevenueForMonthsAndYear(Long storeId, Integer year, List<Integer> months) {
+        Store store = storeService.getById(storeId);
+        Faker faker = new Faker();
+        List<Object[]> results = productOrderRepository.findRevenueByMonthAndYear(store, year, months);
+        List<RevenueMonthDto> revenueMonthDtos = new ArrayList<>();
+        for(Object[] result: results){
+            revenueMonthDtos.add(new RevenueMonthDto(null, (Integer) result[0], (Double) result[1], null));
+        }
+        return revenueMonthDtos;
     }
 }
