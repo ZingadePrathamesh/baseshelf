@@ -16,4 +16,5 @@ public interface BrandRepository extends JpaRepository<Brand, Long> {
     Long countByStore(Store store);
     Optional<Brand> findByStoreAndName(Store store, @Size(message = "Name should be between 2 to 30 characters", max = 30, min = 2) @NotNull(message = "Name cannot be null.") String name);
     List<Brand> findAllByStoreOrderByProductsDesc(Store store);
+    List<Brand> findAllByStoreAndIdIn(Store store, List<Long> brandIds);
 }

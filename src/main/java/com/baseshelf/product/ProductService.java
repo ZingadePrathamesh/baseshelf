@@ -61,7 +61,7 @@ public class ProductService {
         return args -> {
             Faker faker = new Faker();
             Store store = storeService.getByEmail("johndoe@gmail.com");
-            Brand brand = brandService.getAllBrandsByStore(store.getId()).getFirst();
+            List<Brand> brands = brandService.getAllBrandsByStore(store.getId());
             List<Category> materials = categoryService.getAllByIdOrNameOrCategoryType(store.getId(), null, null, "MATERIAL");
             List<Category> colors = categoryService.getAllByIdOrNameOrCategoryType(store.getId(), null, null, "COLOR");
             List<Category> productType = categoryService.getAllByIdOrNameOrCategoryType(store.getId(), null, null, "PRODUCT TYPE");
@@ -88,7 +88,7 @@ public class ProductService {
                         .isTaxed(true)
                         .quantity(faker.number().numberBetween(1, 100))
                         .isActive(true)
-                        .brand(brand)
+                        .brand(brands.get(faker.number().numberBetween(0, brands.size()-1)))
                         .store(store)
                         .build();
                 products.add(product);

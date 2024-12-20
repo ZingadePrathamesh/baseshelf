@@ -80,6 +80,14 @@ public class BrandService {
         );
     }
 
+    public Brand getBrandById(Store store, Long brandId) {
+        Optional<Brand> byStoreAndId = brandRepository.findByStoreAndId(store, brandId);
+
+        return byStoreAndId.orElseThrow(()->
+                new BrandNotFoundException("Brand with id "+ brandId + " does not exists")
+        );
+    }
+
     public ResponseEntity<Object> getBrandCountByStore(Long storeId) {
         Map<String, Long> response = new HashMap<>();
         Store store = storeService.getById(storeId);
@@ -114,7 +122,11 @@ public class BrandService {
 
     public List<Brand> sortByProductCount(Long storeId){
         Store store = storeService.getById(storeId);
-        List<Brand> brands = brandRepository.findAllByStoreOrderByProductsDesc(store);
-        return brands;
+        return brandRepository.findAllByStoreOrderByProductsDesc(store);
+    }
+
+
+    public List<Brand> getAllBrandsByStoreAndIds(Store store, List<Long> brandIds) {
+        return brandRepository.findAllByStoreAndIdIn(store, brandIds);
     }
 }
