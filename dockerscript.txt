@@ -1,1 +1,1 @@
-docker run -d   --name baseshelf   -e POSTGRES_PASSWORD=2024baseshelf@   -e POSTGRES_USER=baseshelf   -e POSTGRES_DB=baseshelfdb1   -e POSTGRES_HOST_AUTH_METHOD=trust   -p 5436:5432   postgres:latest
+docker run -d  --name baseshelf  -e POSTGRES_PASSWORD=2024baseshelf@  -e POSTGRES_USER=baseshelf  -e POSTGRES_DB=baseshelfdb1  -e POSTGRES_HOST_AUTH_METHOD=trust  -p 5436:5432  postgres:latest
