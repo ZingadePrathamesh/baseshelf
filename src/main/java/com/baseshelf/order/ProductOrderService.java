@@ -1,15 +1,13 @@
 package com.baseshelf.order;
 
 import com.baseshelf.analytics.RevenueMonthDto;
+import com.baseshelf.analytics.RevenuePerDate;
 import com.baseshelf.product.Product;
 import com.baseshelf.product.ProductService;
 import com.baseshelf.store.Store;
 import com.baseshelf.store.StoreService;
 import jakarta.persistence.criteria.Predicate;
-import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
-import net.datafaker.Faker;
-import org.springframework.cglib.core.Local;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +15,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 @Service
@@ -177,40 +174,70 @@ public class ProductOrderService {
         };
     }
 
-    public Double getRevenueByDate(Long storeId, LocalDate date) {
-        ProductOrderFilter filter = new ProductOrderFilter(date, date.plusDays(1L), null, null, null, null);
-        List<ProductOrderResponseDto> productOrders = this.getAllByStoreAndFilter(storeId, filter);
-        Double totalRevenue = 0.0;
-        for(ProductOrderResponseDto product: productOrders){
-            totalRevenue += product.getTotalAmount();
-        }
-        return totalRevenue;
+    public List<RevenuePerDate> getRevenueByDate(Long storeId, LocalDate date) {
+        Store store = storeService.getById(storeId);
+        List<Object[]> results = productOrderRepository.findRevenueByDateRange(store, date, date);
+        return results.stream()
+                .map(result -> new RevenuePerDate((LocalDate) result[0], (Double) result[1]))
+                .collect(Collectors.toList());
     }
 
-    public Map<LocalDate, Double> getRevenueByDateRange(Long storeId, LocalDate from, LocalDate to) {
+    public List<RevenuePerDate> getRevenueByDateRange(Long storeId, LocalDate from, LocalDate to) {
         Store store = storeService.getById(storeId);
-        List<LocalDate> dates = new ArrayList<>();
-        while(from.isBefore(to) || from.equals(to)){
-            dates.add(from);
-            from = from.plusDays(1);
-        }
-        System.out.println(dates);
-        List<Object[]> results =  productOrderRepository.findRevenueByDateRange(store, dates);
+        List<Object[]> results =  productOrderRepository.findRevenueByDateRange(store, from, to);
+        List<RevenuePerDate> revenuePerDates = new ArrayList<>();
         return results.stream()
-                .collect(Collectors.toMap(
-                        result -> (LocalDate) result[0],
-                        result -> (Double) result[1]
-                ));
+                .map(result -> new RevenuePerDate((LocalDate) result[0], (Double) result[1]))
+                .collect(Collectors.toList());
     }
 
     public List<RevenueMonthDto> getRevenueForMonthsAndYear(Long storeId, Integer year, List<Integer> months) {
         Store store = storeService.getById(storeId);
-        Faker faker = new Faker();
         List<Object[]> results = productOrderRepository.findRevenueByMonthAndYear(store, year, months);
-        List<RevenueMonthDto> revenueMonthDtos = new ArrayList<>();
-        for(Object[] result: results){
-            revenueMonthDtos.add(new RevenueMonthDto(null, (Integer) result[0], (Double) result[1], null));
+        List<RevenueMonthDto> revenueMonthDtos = results.stream()
+                .map(result-> new RevenueMonthDto(getMonth((Integer) result[0]), (Integer) result[0], (Double) result[1], null))
+                .toList();
+
+        for(int i = 0; i<revenueMonthDtos.size(); i++){
+            if (i == 0) revenueMonthDtos.get(i).setGrowthPercentage(0D);
+            else{
+                double previousMonthRevenue = revenueMonthDtos.get(i-1).getRevenue();
+                double currentMonthRevenue = revenueMonthDtos.get(i).getRevenue();
+                double profitPercent = (currentMonthRevenue/previousMonthRevenue - 1) * 100;
+                revenueMonthDtos.get(i).setGrowthPercentage(profitPercent);
+            }
         }
         return revenueMonthDtos;
+    }
+
+    public static String getMonth(int month){
+        return switch (month){
+            case 1:
+                yield "January";
+            case 2:
+                yield "February";
+            case 3:
+                yield "March";
+            case 4:
+                yield "April";
+            case 5:
+                yield "May";
+            case 6:
+                yield "June";
+            case 7:
+                yield "July";
+            case 8:
+                yield "August";
+            case 9:
+                yield "September";
+            case 10:
+                yield "October";
+            case 11:
+                yield "November";
+            case 12:
+                yield "December";
+            default :
+                throw new IllegalStateException("Unexpected value: " + month);
+        };
     }
 }
