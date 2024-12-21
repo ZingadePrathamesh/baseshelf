@@ -1,4 +1,4 @@
-package com.baseshelf.analytics;
+package com.baseshelf.analytics.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class RevenueMonthDto {
+public class OrderMonthDto {
     private String month; // jan to dec
     private Integer monthNumber; // 1 to 12
     private Long itemCount;

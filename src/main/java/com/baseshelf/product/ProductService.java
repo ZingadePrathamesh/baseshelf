@@ -1,7 +1,6 @@
 package com.baseshelf.product;
 
 import com.baseshelf.barcode.BarcodeService;
-import com.baseshelf.barcode.CustomBarcodeException;
 import com.baseshelf.brand.Brand;
 import com.baseshelf.brand.BrandService;
 import com.baseshelf.category.Category;
@@ -33,9 +32,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.function.Function;
@@ -44,7 +41,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class ProductService {
-    private final ProductJpaRepository productJpaRepository;
+    private final ProductRepository productRepository;
     private final StoreService storeService;
     private final BrandService brandService;
     private final CategoryService categoryService;
@@ -53,7 +50,7 @@ public class ProductService {
     @Bean
     @Order(value = 4)
     public CommandLineRunner insertProducts(
-            ProductJpaRepository productJpaRepository,
+            ProductRepository productRepository,
             StoreService storeService,
             BrandService brandService,
             CategoryService categoryService
@@ -93,56 +90,56 @@ public class ProductService {
                         .build();
                 products.add(product);
             }
-            productJpaRepository.saveAll(products);
+            productRepository.saveAll(products);
             System.out.println("All products have been saved.");
         };
     }
 
     public Product getByIdAndStore(Long productId, Store store) {
-        Optional<Product> productOptional = productJpaRepository.findByIdAndStore(productId, store);
+        Optional<Product> productOptional = productRepository.findByIdAndStore(productId, store);
         return productOptional.orElseThrow(()->
                 new ProductNotFoundException("Product with id: " + productId + " does not exist."));
     }
 
     public Product getByIdAndStore(Long productId, Long storeId) {
         Store store =  storeService.getById(storeId);
-        Optional<Product> productOptional = productJpaRepository.findByIdAndStore(productId, store);
+        Optional<Product> productOptional = productRepository.findByIdAndStore(productId, store);
         return productOptional.orElseThrow(()->
                 new ProductNotFoundException("Product with id: " + productId + " does not exist."));
     }
 
     public List<Product> getAllProductsFromStore(Long storeId){
         Store store =  storeService.getById(storeId);
-        return productJpaRepository.findAllByStore(store);
+        return productRepository.findAllByStore(store);
     }
 
     public List<Product> getAllProductsFromStoreAndBrand(Long storeId, Long brandId){
         Store store = storeService.getById(storeId);
         Brand brand = brandService.getBrandById(storeId, brandId);
-        return productJpaRepository.findAllByStoreAndBrand(store, brand);
+        return productRepository.findAllByStoreAndBrand(store, brand);
     }
 
     public List<Product> getAllProductsByCategories(Long storeId, List<Long> categoryIds){
         Store store = storeService.getById(storeId);
 
         long categoryCount = (long) categoryIds.size();
-        return productJpaRepository.findByAllCategoryIdsAndStore(store, categoryIds, categoryCount);
+        return productRepository.findByAllCategoryIdsAndStore(store, categoryIds, categoryCount);
     }
 
     public List<Product> getAllProductsByStoreAndFilter(Long storeId, ProductFilter productFilter) {
         Store store = storeService.getById(storeId);
-        return productJpaRepository.findAll(dynamicProductFilter(storeId, productFilter));
+        return productRepository.findAll(dynamicProductFilter(storeId, productFilter));
     }
 
     public List<Product> getAllByStoreAndIds(Long storeId, Set<Long> productIds){
         Store store = storeService.getById(storeId);
-        return productJpaRepository.findAllByStoreAndIdIn(store, productIds);
+        return productRepository.findAllByStoreAndIdIn(store, productIds);
     }
 
     @Transactional
     public Set<Product> validateProductsAndQuantity(Long storeId, Map<Long, Integer> productMap){
         Store store =  storeService.getById(storeId);
-        List<Product> uncheckProducts = productJpaRepository.findAllByStoreAndIdIn(store, productMap.keySet());
+        List<Product> uncheckProducts = productRepository.findAllByStoreAndIdIn(store, productMap.keySet());
         Set<Product> checkedProducts = new HashSet<>();
 
         Map<Long, Product> productMap1 = uncheckProducts.stream()
@@ -181,10 +178,10 @@ public class ProductService {
         product.setCategories(new ArrayList<>(categories)); // Convert Set to List
 
         // Save the product and generate the barcode
-        Product savedProduct = productJpaRepository.save(product);
+        Product savedProduct = productRepository.save(product);
 
         // Save the updated product with the generated barcode
-        return productJpaRepository.save(savedProduct);
+        return productRepository.save(savedProduct);
     }
 
     public ResponseEntity<byte[]> getBarcodeForProduct(Long storeId, Long productId) throws OutputException, BarcodeException, IOException {
@@ -258,7 +255,7 @@ public class ProductService {
 
     public void deleteById(Long storeId, List<Long> productIds){
         Store store =  storeService.getById(storeId);
-        productJpaRepository.deleteByStoreAndIdIn(store, productIds);
+        productRepository.deleteByStoreAndIdIn(store, productIds);
     }
 
     @Transactional

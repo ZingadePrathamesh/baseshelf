@@ -1,4 +1,4 @@
-package com.baseshelf.analytics;
+package com.baseshelf.analytics.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,7 +9,7 @@ import java.time.LocalDate;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AnalyticsByBrandDate {
+public class BrandDateDto {
     private Long brandId;
     private LocalDate date;
     private Long quantity;

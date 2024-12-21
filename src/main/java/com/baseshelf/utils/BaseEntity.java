@@ -40,7 +40,8 @@ public class BaseEntity {
 
     @PrePersist
     public void setValuesPrePersist(){
-        this.createdOn = LocalDate.now();
+        if(createdOn == null)
+            this.createdOn = LocalDate.now();
         this.isActive = true;
     }
 

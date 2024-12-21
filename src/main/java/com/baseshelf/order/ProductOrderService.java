@@ -6,6 +6,10 @@ import com.baseshelf.store.Store;
 import com.baseshelf.store.StoreService;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
+import net.datafaker.Faker;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.core.annotation.Order;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +23,36 @@ public class ProductOrderService {
     private final ProductOrderRepository productOrderRepository;
     private final ProductService productService;
     private final StoreService storeService;
+
+    @Bean
+    @Order(value = 5)
+    public CommandLineRunner insertOrder(
+            ProductOrderRepository productOrderRepository,
+            ProductService productService,
+            StoreService storeService
+    ){
+        return args -> {
+            List<Long> productIds = new ArrayList<>();
+            List<Long> productIds2 = new ArrayList<>();
+            List<Long> productIds3 = new ArrayList<>();
+            List<Long> productIds4 = new ArrayList<>();
+            Faker faker = new Faker();
+            int max = faker.number().numberBetween(1, 10);
+            for(int i = 0; i < max; i++){
+                productIds.add((long) faker.number().numberBetween(200, 275));
+                productIds2.add((long) faker.number().numberBetween(276, 325));
+                productIds3.add((long) faker.number().numberBetween(326, 400));
+                productIds4.add((long) faker.number().numberBetween(200, 400));
+            }
+            createOrderByIds(2L, productIds);
+            createOrderByIds(2L, productIds);
+            createOrderByIds(2L, productIds2);
+            createOrderByIds(2L, productIds3);
+            createOrderByIds(2L, productIds3);
+            createOrderByIds(2L, productIds4);
+            createOrderByIds(2L, productIds4);
+        };
+    }
 
     public ProductOrderResponseDto createOrderByIds(Long storeId, List<Long> productIds){
         Map<Long, Integer> productMap = new HashMap<>();

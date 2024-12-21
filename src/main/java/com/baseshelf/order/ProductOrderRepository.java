@@ -1,6 +1,5 @@
 package com.baseshelf.order;
 
-import com.baseshelf.brand.Brand;
 import com.baseshelf.store.Store;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -24,11 +23,11 @@ public interface ProductOrderRepository extends JpaRepository<ProductOrder, Long
     @Modifying
     void deleteByStoreAndId(Store store, Long orderId);
 
-    @Query("SELECT po.createdOn, SUM(po.totalAmount) FROM ProductOrder po " +
+    @Query("SELECT po.createdOn, SUM(po.totalAmount), SUM(po.itemCount) FROM ProductOrder po " +
             "WHERE po.store = :store " +
             "AND po.createdOn BETWEEN :from AND :to " +
             "GROUP BY po.createdOn")
-    List<Object[]> findRevenueByDateRange(@Param("store") Store store, @Param("from") LocalDate from, @Param("to") LocalDate to);
+    List<Object[]> findOrdersAnalysisByDateRange(@Param("store") Store store, @Param("from") LocalDate from, @Param("to") LocalDate to);
 
     @Query("SELECT MONTH(po.createdOn) AS month, SUM(po.itemCount), SUM(po.totalAmount) AS totalRevenue " +
             "FROM ProductOrder po " +

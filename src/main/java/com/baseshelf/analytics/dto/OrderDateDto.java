@@ -1,4 +1,4 @@
-package com.baseshelf.analytics;
+package com.baseshelf.analytics.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,7 +9,8 @@ import java.time.LocalDate;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class RevenuePerDate {
+public class OrderDateDto {
     private LocalDate date;
     private Double revenue;
+    private Long itemCount;
 }
