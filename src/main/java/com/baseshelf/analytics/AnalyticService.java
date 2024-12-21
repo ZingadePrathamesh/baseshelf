@@ -10,6 +10,7 @@ import com.baseshelf.product.ProductRepository;
 import com.baseshelf.store.Store;
 import com.baseshelf.store.StoreService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 import java.sql.Date;
@@ -160,6 +161,33 @@ public class AnalyticService {
                 .toList();
 
         return productDateDtos;
+    }
+
+    public List<ProductMonthDto> analysisOfProductsByMonths(Long storeId, Integer year, List<Integer> months){
+        Store store = storeService.getById(storeId);
+
+        List<Object[]> results = productRepository.findProductsDataByMonth(store, year, months);
+
+        List<ProductMonthDto> productMonthDtos = results.stream()
+                .map(result -> {
+                    String month = getMonth((Integer) result[0]);
+                    return new ProductMonthDto(month, (Long) result[1], (Float) result[2], (Long) result[3], (Double) result[4], (Brand) result[5]);
+                })
+                .toList();
+        return productMonthDtos;
+    }
+
+    public List<ProductMonthDto> analysisOfTopProductsByMonths(Long storeId, Integer year, List<Integer> months, Integer limit){
+        List<Object[]> results = productRepository.findTopProductsDataByMonth(storeId, year, months, limit);
+
+        List<ProductMonthDto> productMonthDtos = results.stream()
+                .map(result -> {
+                    String month = getMonth(((Double) result[0]).intValue());
+                    Brand brand = brandService.getBrandById(storeId, (Long) result[5]);
+                    return new ProductMonthDto(month, (Long) result[1], (Float) result[2], (Long) result[3], ((Float) result[4]).doubleValue(), brand);
+                })
+                .toList();
+        return productMonthDtos;
     }
 
     public static String getMonth(int month){

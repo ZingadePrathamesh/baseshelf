@@ -11,8 +11,8 @@ import lombok.NoArgsConstructor;
 public class ProductMonthDto {
     private String month;
     private Long productId;
-    private Float sellingPrize;
+    private Float sellingPrice;
     private Long soldQuantity;
     private Double totalRevenue;
-    private Brand brandId;
+    private Brand brand;
 }

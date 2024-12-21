@@ -79,4 +79,36 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
             @Param("limit") int limit
     );
 
+    @Query("SELECT MONTH(oi.createdOn) AS month, p.id AS product, p.sellingPrice AS price, SUM(oi.quantity) AS quantity, SUM(oi.amount) AS amount, p.brand AS brand FROM OrderItem oi " +
+            "INNER JOIN Product p " +
+            "ON oi.product = p " +
+            "WHERE p.store = :store " +
+            "AND YEAR(oi.createdOn) = :year " +
+            "AND MONTH(oi.createdOn) IN :months " +
+            "GROUP BY MONTH(oi.createdOn), p.id, p.brand " +
+            "ORDER BY MONTH(oi.createdOn) DESC, SUM(oi.quantity) DESC")
+    List<Object[]> findProductsDataByMonth(Store store, Integer year, List<Integer> months);
+
+    @Query(value = """
+        SELECT * 
+        FROM (
+            SELECT 
+                date_part('month', oi.created_on) AS month, 
+                p.id AS product_id, 
+                p.selling_price AS price,
+                SUM(oi.quantity) AS total_quantity,
+                SUM(oi.amount) AS revenue,
+                p.brand_id AS brand,
+                ROW_NUMBER() OVER (PARTITION BY date_part('month', oi.created_on) ORDER BY SUM(oi.quantity) DESC) AS rank
+            FROM order_item oi
+            INNER JOIN product p ON oi.product_id = p.id
+            WHERE date_part('month', oi.created_on) IN :months
+              AND p.store_id = :storeId
+              AND date_part('year', oi.created_on) = :year
+            GROUP BY date_part('month', oi.created_on), p.id, p.brand_id
+        ) ranked_products
+        WHERE rank <= :limit
+        ORDER BY month DESC, rank
+    """, nativeQuery = true)
+    List<Object[]> findTopProductsDataByMonth(Long storeId, Integer year, List<Integer> months, Integer limit);
 }

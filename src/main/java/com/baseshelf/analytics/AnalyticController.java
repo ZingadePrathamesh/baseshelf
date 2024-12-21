@@ -104,6 +104,27 @@ public class AnalyticController {
         return analyticService.analysisOfTopProductsByDateRange(storeId, from, to, top);
     }
 
+    @GetMapping("products/months")
+    public List<ProductMonthDto> getProductDataByMonths(
+            @PathVariable("store-id") Long storeId,
+            @RequestParam(value = "year") Integer year,
+            @RequestParam(value = "months") List<Integer> months
+    ){
+        return analyticService.analysisOfProductsByMonths(storeId, year, months);
+    }
+
+    @GetMapping("products/months/top")
+    public List<ProductMonthDto> getTopProductDataByMonths(
+            @PathVariable("store-id") Long storeId,
+            @RequestParam(value = "year") Integer year,
+            @RequestParam(value = "months") List<Integer> months,
+            @RequestParam(value = "top") Integer top
+    ){
+        return analyticService.analysisOfTopProductsByMonths(storeId, year, months, top);
+    }
+
+
+
 
 
 

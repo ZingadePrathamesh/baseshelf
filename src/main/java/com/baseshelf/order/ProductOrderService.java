@@ -39,10 +39,10 @@ public class ProductOrderService {
             Faker faker = new Faker();
             int max = faker.number().numberBetween(1, 10);
             for(int i = 0; i < max; i++){
-                productIds.add((long) faker.number().numberBetween(200, 275));
+                productIds.add((long) faker.number().numberBetween(201, 275));
                 productIds2.add((long) faker.number().numberBetween(276, 325));
-                productIds3.add((long) faker.number().numberBetween(326, 400));
-                productIds4.add((long) faker.number().numberBetween(200, 400));
+                productIds3.add((long) faker.number().numberBetween(326, 399));
+                productIds4.add((long) faker.number().numberBetween(201, 399));
             }
             createOrderByIds(2L, productIds);
             createOrderByIds(2L, productIds);
