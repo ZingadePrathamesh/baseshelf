@@ -83,7 +83,7 @@ public class ProductService {
                         .costPrice(costPrize)
                         .sellingPrice(sellingPrize)
                         .isTaxed(true)
-                        .quantity(faker.number().numberBetween(1, 100))
+                        .quantity(faker.number().numberBetween(10, 100))
                         .isActive(true)
                         .brand(brands.get(faker.number().numberBetween(0, brands.size()-1)))
                         .store(store)

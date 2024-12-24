@@ -1,13 +1,7 @@
 package com.baseshelf.analytics;
 
 import com.baseshelf.analytics.dto.*;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -95,7 +89,7 @@ public class AnalyticController {
     }
 
     @GetMapping("products/date-range/top")
-    public List<ProductDateDto> getProductDataByDateRange(
+    public List<CategoryDateDto> getProductDataByDateRange(
             @PathVariable("store-id") Long storeId,
             @RequestParam(value = "from") LocalDate from,
             @RequestParam(value = "to") LocalDate to,
@@ -123,9 +117,25 @@ public class AnalyticController {
         return analyticService.analysisOfTopProductsByMonths(storeId, year, months, top);
     }
 
+    @GetMapping("categories/date-range")
+    public List<CategoryDateDto> getProductDataByDateRange(
+            @PathVariable("store-id") Long storeId,
+            @RequestParam(value = "from") LocalDate from,
+            @RequestParam(value = "to") LocalDate to,
+            @RequestParam(value = "categories") List<Long> categories
+    ){
+        return analyticService.analysisOfCategoryWiseSalesByDateRange(storeId, from, to, categories);
+    }
 
-
-
+    @GetMapping("categories/months")
+    public List<CategoryMonthDto> getTopProductDataByMonths(
+            @PathVariable("store-id") Long storeId,
+            @RequestParam(value = "year") Integer year,
+            @RequestParam(value = "months") List<Integer> months,
+            @RequestParam(value = "categories") List<Long> categories
+    ){
+        return analyticService.analysisOfCategoryWiseSalesByDateRange(storeId, year, months, categories);
+    }
 
 
 }

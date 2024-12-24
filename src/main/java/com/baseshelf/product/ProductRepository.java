@@ -111,4 +111,53 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
         ORDER BY month DESC, rank
     """, nativeQuery = true)
     List<Object[]> findTopProductsDataByMonth(Long storeId, Integer year, List<Integer> months, Integer limit);
+
+    @Query("""
+        SELECT oi.createdOn AS date, 
+               p.id AS product, 
+               p.sellingPrice AS price,
+               SUM(oi.quantity) AS soldQuantity, 
+               SUM(oi.amount) AS revenue, 
+               p.brand AS brand
+        FROM Product p 
+        JOIN p.categories c
+        INNER JOIN OrderItem oi ON oi.product = p 
+        WHERE p.store = :store 
+          AND oi.createdOn BETWEEN :from AND :to 
+          AND c.id IN :categoryIds 
+        GROUP BY oi.createdOn, p.id, p.sellingPrice, brand
+        HAVING COUNT(DISTINCT c.id) = :categoryCount
+    """)
+    List<Object[]> findCategorySalesAnalysis(
+            @Param("store") Store store,
+            @Param("from") LocalDate from,
+            @Param("to") LocalDate to,
+            @Param("categoryIds") List<Long> categoryIds,
+            @Param("categoryCount") long categoryCount
+    );
+
+    @Query("""
+        SELECT MONTH(oi.createdOn) AS month, 
+               p.id AS product, 
+               p.sellingPrice AS price, 
+               SUM(oi.quantity) AS soldQuantity, 
+               SUM(oi.amount) AS revenue, 
+               p.brand AS brand 
+        FROM Product p 
+        JOIN p.categories c 
+        INNER JOIN OrderItem oi ON oi.product = p 
+        WHERE p.store = :store 
+          AND YEAR(oi.createdOn) = :year 
+          AND MONTH(oi.createdOn) IN :months 
+          AND c.id IN :categoryIds 
+        GROUP BY month, p.id, p.sellingPrice, brand 
+        HAVING COUNT(DISTINCT c.id) = :categoryCount 
+    """)
+    List<Object[]> findCategoryAnalysisByMonth(
+            @Param("store") Store store,
+            @Param("year") Integer year,
+            @Param("months") List<Integer> months,
+            @Param("categoryIds") List<Long> categoryIds,
+            @Param("categoryCount") long categoryCount
+    );
 }

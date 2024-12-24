@@ -4,13 +4,15 @@ import com.baseshelf.analytics.dto.*;
 import com.baseshelf.brand.Brand;
 import com.baseshelf.brand.BrandService;
 import com.baseshelf.category.Category;
+import com.baseshelf.category.CategoryService;
 import com.baseshelf.order.OrderItemRepository;
 import com.baseshelf.order.ProductOrderRepository;
 import com.baseshelf.product.ProductRepository;
+import com.baseshelf.product.ProductService;
 import com.baseshelf.store.Store;
 import com.baseshelf.store.StoreService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cglib.core.Local;
+import net.datafaker.providers.base.Cat;
 import org.springframework.stereotype.Service;
 
 import java.sql.Date;
@@ -18,6 +20,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -29,6 +32,8 @@ public class AnalyticService {
     private final BrandService brandService;
     private final OrderItemRepository orderItemRepository;
     private final ProductRepository productRepository;
+    private final ProductService productService;
+    private final CategoryService categoryService;
 
     public List<OrderDateDto> getRevenueByDate(Long storeId, LocalDate date) {
         Store store = storeService.getById(storeId);
@@ -149,14 +154,15 @@ public class AnalyticService {
         return productDateDtos;
     }
 
-    public List<ProductDateDto> analysisOfTopProductsByDateRange(Long storeId, LocalDate from, LocalDate to, Integer limit){
+    public List<CategoryDateDto> analysisOfTopProductsByDateRange(Long storeId, LocalDate from, LocalDate to, Integer limit){
         List<Object[]> results = productRepository.findTopProductsByDateRange(storeId, from, to, limit);
 
-        List<ProductDateDto> productDateDtos = results.stream()
+        List<CategoryDateDto> productDateDtos = results.stream()
                 .map(result -> {
                     LocalDate localDate = ((Date) result[0]).toLocalDate();
                     Brand brand = brandService.getBrandById(storeId, (Long) result[5]);
-                    return new ProductDateDto(localDate, (Long) result[1], (Float) result[2], (Long) result[3], ((Float) result[4]).doubleValue(), brand);
+                    List<Category> categoryList = productService.getByIdAndStore((Long) result[1], storeId).getCategories();
+                    return new CategoryDateDto(localDate, (Long) result[1], (Float) result[2], (Long) result[3], ((Float) result[4]).doubleValue(), brand, categoryList);
                 })
                 .toList();
 
@@ -189,6 +195,33 @@ public class AnalyticService {
                 .toList();
         return productMonthDtos;
     }
+
+    public List<CategoryDateDto> analysisOfCategoryWiseSalesByDateRange(Long storeId, LocalDate from, LocalDate to, List<Long> categories){
+        Store store = storeService.getById(storeId);
+        System.out.println(categories);
+        List<Object[]> results = productRepository.findCategorySalesAnalysis(store, from, to, categories, categories.size());
+
+        return results.stream()
+                .map(result->{
+                    return new CategoryDateDto((LocalDate) result[0], (Long) result[1], (Float) result[2]
+                    , (Long) result[3], (Double) result[4], (Brand) result[5], null);
+                })
+                .toList();
+    };
+
+    public List<CategoryMonthDto> analysisOfCategoryWiseSalesByDateRange(Long storeId, Integer year, List<Integer> months, List<Long> categories){
+        Store store = storeService.getById(storeId);
+        System.out.println(categories);
+        List<Object[]> results = productRepository.findCategoryAnalysisByMonth(store, year, months, categories, categories.size());
+
+        return results.stream()
+                .map(result->{
+                    String month = getMonth((Integer) result[0]);
+                    return new CategoryMonthDto(month, (Long) result[1], (Float) result[2]
+                    , (Long) result[3], (Double) result[4], (Brand) result[5], null);
+                })
+                .toList();
+    };
 
     public static String getMonth(int month){
         return switch (month){
