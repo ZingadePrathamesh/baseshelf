@@ -138,7 +138,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
     @Query("""
         SELECT MONTH(oi.createdOn) AS month, 
-               p.id AS product, 
+               SUM(p.id) AS product, 
                p.sellingPrice AS price, 
                SUM(oi.quantity) AS soldQuantity, 
                SUM(oi.amount) AS revenue, 
@@ -150,7 +150,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
           AND YEAR(oi.createdOn) = :year 
           AND MONTH(oi.createdOn) IN :months 
           AND c.id IN :categoryIds 
-        GROUP BY month, p.id, p.sellingPrice, brand 
+        GROUP BY month, p.sellingPrice, brand 
         HAVING COUNT(DISTINCT c.id) = :categoryCount 
     """)
     List<Object[]> findCategoryAnalysisByMonth(

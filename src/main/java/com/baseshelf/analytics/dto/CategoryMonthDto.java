@@ -1,4 +1,4 @@
-package com.baseshelf.analytics;
+package com.baseshelf.analytics.dto;
 
 import com.baseshelf.brand.Brand;
 import com.baseshelf.category.Category;
@@ -13,7 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 public class CategoryMonthDto {
     private String month;
-    private Long productId;
+    private Long productCounts;
     private Float sellingPrice;
     private Long soldQuantity;
     private Double revenue;

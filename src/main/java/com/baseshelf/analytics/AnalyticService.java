@@ -12,7 +12,6 @@ import com.baseshelf.product.ProductService;
 import com.baseshelf.store.Store;
 import com.baseshelf.store.StoreService;
 import lombok.RequiredArgsConstructor;
-import net.datafaker.providers.base.Cat;
 import org.springframework.stereotype.Service;
 
 import java.sql.Date;
@@ -20,7 +19,6 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -111,6 +109,16 @@ public class AnalyticService {
         Store store = storeService.getById(storeId);
         List<Brand> brands = brandService.getAllBrandsByStoreAndIds(store, brandIds);
 
+        return performanceOfGivenBrandByDateRange(store, from, to, brands);
+    }
+
+    public List<BrandMonthDto> totalAnalysisOfMultipleBrandsByMonthYear(Long storeId, List<Long> brandIds, Integer year, List<Integer> months){
+        Store store = storeService.getById(storeId);
+        List<Brand> brands = brandService.getAllBrandsByStoreAndIds(store, brandIds);
+        return performanceOfBrandsByMonths(store, year, months, brands);
+    }
+
+    private List<BrandDateDto> performanceOfGivenBrandByDateRange( Store store, LocalDate from, LocalDate to, List<Brand> brands) {
         List<Object[]> results = orderItemRepository.analysisOfMultipleBrandsByDateRange(store, brands, from, to);
 
         List<BrandDateDto> analytics = results.stream()
@@ -124,10 +132,19 @@ public class AnalyticService {
         return analytics;
     }
 
-    public List<BrandMonthDto> totalAnalysisOfMultipleBrandsByMonthYear(Long storeId, List<Long> brandIds, Integer year, List<Integer> months){
+    public List<BrandDateDto> performanceOfAllBrandsByDateRange(Long storeId, LocalDate from, LocalDate to){
         Store store = storeService.getById(storeId);
-        List<Brand> brands = brandService.getAllBrandsByStoreAndIds(store, brandIds);
+        List<Brand> brands= brandService.getAllBrandsByStore(storeId);
+        return performanceOfGivenBrandByDateRange(store, from, to, brands);
+    }
 
+    public List<BrandMonthDto> performanceOfAllBrandsByMonth(Long storeId, Integer year, List<Integer> months){
+        Store store = storeService.getById(storeId);
+        List<Brand> brands = brandService.getAllBrandsByStore(storeId);
+        return performanceOfBrandsByMonths(store, year, months, brands);
+    }
+
+    private List<BrandMonthDto> performanceOfBrandsByMonths( Store store, Integer year, List<Integer> months, List<Brand> brands) {
         List<Object[]> results = orderItemRepository.analysisOfMultipleBrandsByMonthYear(store, brands, year, months);
 
         List<BrandMonthDto> analytics = results.stream()

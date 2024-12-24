@@ -14,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 public class CategoryDateDto {
     private LocalDate date;
-    private Long productId;
+    private Long productCounts;
     private Float sellingPrice;
     private Long soldQuantity;
     private Double revenue;

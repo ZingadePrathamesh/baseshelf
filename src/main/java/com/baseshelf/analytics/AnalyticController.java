@@ -1,6 +1,7 @@
 package com.baseshelf.analytics;
 
 import com.baseshelf.analytics.dto.*;
+import com.baseshelf.brand.BrandDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -77,6 +78,24 @@ public class AnalyticController {
             @RequestParam(value = "to") LocalDate to
     ){
         return analyticService.totalAnalysisOfMultipleBrandsByDateRange(storeId, brandIds, from, to);
+    }
+
+    @GetMapping("/brands/months/performances")
+    public List<BrandMonthDto> getPerformanceOfBrandMonths(
+            @PathVariable("store-id") Long storeId,
+            @RequestParam(value = "year") Integer year,
+            @RequestParam(value = "months") List<Integer> months
+    ){
+        return analyticService.performanceOfAllBrandsByMonth(storeId, year, months);
+    }
+
+    @GetMapping("brands/date-range/performances")
+    public List<BrandDateDto> getPerformanceOfBrandMonths(
+            @PathVariable("store-id") Long storeId,
+            @RequestParam(value = "from") LocalDate from,
+            @RequestParam(value = "to") LocalDate to
+    ){
+        return analyticService.performanceOfAllBrandsByDateRange(storeId, from, to);
     }
 
     @GetMapping("products/date-range")
