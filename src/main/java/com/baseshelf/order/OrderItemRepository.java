@@ -33,4 +33,104 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
             "GROUP BY oi.createdOn, id, name " +
             "ORDER BY oi.createdOn ASC ")
     List<Object[]> insightsOfBrandsByDateRange(Store store, List<Brand> brands, LocalDate from, LocalDate to);
+
+    @Query(value = """
+        SELECT * 
+        FROM (
+            SELECT 
+                date_part('month', oi.created_on) AS month, 
+                p.id AS product_id, 
+                p.name AS name, 
+                p.selling_price AS price,
+                SUM(oi.quantity) AS total_quantity, 
+                COUNT(DISTINCT oi.order_id) AS orders, 
+                SUM(oi.amount) AS revenue, 
+                p.brand_id AS brand, 
+                ROW_NUMBER() OVER (PARTITION BY date_part('month', oi.created_on) ORDER BY SUM(oi.quantity) DESC) AS rank
+            FROM order_item oi
+            INNER JOIN product p ON oi.product_id = p.id 
+            WHERE p.store_id = :storeId 
+              AND date_part('year', oi.created_on) = :year 
+              AND date_part('month', oi.created_on) BETWEEN :lowerMonth AND :upperMonth 
+              AND p.id IN :productIds
+            GROUP BY date_part('month', oi.created_on), p.id, p.brand_id
+        ) ranked_products
+        WHERE rank <= :limit
+        ORDER BY month DESC, rank
+    """, nativeQuery = true)
+    List<Object[]> insightsOfProductsMonth(Long storeId, Integer year, Integer lowerMonth, Integer upperMonth, List<Long> productIds, Integer limit);
+
+    @Query(value = """
+        SELECT * 
+        FROM (
+            SELECT 
+                date_part('month', oi.created_on) AS month, 
+                p.id AS product_id, 
+                p.name AS name, 
+                p.selling_price AS price,
+                SUM(oi.quantity) AS total_quantity, 
+                COUNT(DISTINCT oi.order_id) AS orders, 
+                SUM(oi.amount) AS revenue, 
+                p.brand_id AS brand, 
+                ROW_NUMBER() OVER (PARTITION BY date_part('month', oi.created_on) ORDER BY SUM(oi.quantity) DESC) AS rank
+            FROM order_item oi
+            INNER JOIN product p ON oi.product_id = p.id 
+            WHERE p.store_id = :storeId 
+              AND date_part('year', oi.created_on) = :year 
+              AND date_part('month', oi.created_on) BETWEEN :lowerMonth AND :upperMonth 
+            GROUP BY date_part('month', oi.created_on), p.id, p.brand_id
+        ) ranked_products
+        WHERE rank <= :limit
+        ORDER BY month DESC, rank
+    """, nativeQuery = true)
+    List<Object[]> insightsOfProductsMonth(Long storeId, Integer year, Integer lowerMonth, Integer upperMonth, Integer limit);
+
+    @Query(value = """
+        SELECT * 
+        FROM (
+            SELECT 
+                oi.created_on AS date, 
+                p.id AS product_id, 
+                p.name AS name, 
+                p.selling_price AS price,
+                SUM(oi.quantity) AS total_quantity, 
+                COUNT(DISTINCT oi.order_id) AS orders, 
+                SUM(oi.amount) AS revenue, 
+                p.brand_id AS brand, 
+                ROW_NUMBER() OVER (PARTITION BY oi.created_on ORDER BY SUM(oi.quantity) DESC) AS rank
+            FROM order_item oi
+            INNER JOIN product p ON oi.product_id = p.id 
+            WHERE p.store_id = :storeId 
+                AND oi.created_on BETWEEN :from AND :to 
+                AND p.id IN :productIds
+            GROUP BY oi.created_on, p.id, p.brand_id
+        ) ranked_products
+        WHERE rank <= :limit
+        ORDER BY date DESC, rank
+    """, nativeQuery = true)
+    List<Object[]> insightsOfProductsDate(Long storeId, LocalDate from, LocalDate to, List<Long> productIds, Integer limit);
+
+    @Query(value = """
+        SELECT * 
+        FROM (
+            SELECT 
+                oi.created_on AS date, 
+                p.id AS product_id, 
+                p.name AS name, 
+                p.selling_price AS price,
+                SUM(oi.quantity) AS total_quantity, 
+                COUNT(DISTINCT oi.order_id) AS orders, 
+                SUM(oi.amount) AS revenue, 
+                p.brand_id AS brand, 
+                ROW_NUMBER() OVER (PARTITION BY oi.created_on ORDER BY SUM(oi.quantity) DESC) AS rank
+            FROM order_item oi
+            INNER JOIN product p ON oi.product_id = p.id 
+            WHERE p.store_id = :storeId 
+                AND oi.created_on BETWEEN :from AND :to 
+            GROUP BY oi.created_on, p.id, p.brand_id
+        ) ranked_products
+        WHERE rank <= :limit
+        ORDER BY date DESC, rank
+    """, nativeQuery = true)
+    List<Object[]> insightsOfProductsDate(Long storeId, LocalDate from, LocalDate to, Integer limit);
 }

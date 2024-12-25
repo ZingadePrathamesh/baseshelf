@@ -1,7 +1,6 @@
 package com.baseshelf.analytics;
 
 import com.baseshelf.analytics.dto.*;
-import com.baseshelf.brand.BrandDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -59,6 +58,29 @@ public class AnalyticController {
             @RequestParam(required = false, value= "brand-ids") List<Long> brandIds
     ){
         return analyticService.brandAnalysisByDateRange(storeId, from, to, brandIds);
+    }
+
+    @GetMapping("products/date-range/new")
+    public List<ProductInsightDateDto> getProductsAnalysisByDateRange(
+            @PathVariable("store-id") Long storeId,
+            @RequestParam(required = true, value = "from") LocalDate from,
+            @RequestParam(required = true, value= "to") LocalDate to,
+            @RequestParam(required = false, value= "product-ids") List<Long> productIds,
+            @RequestParam(required = false, value = "limit") Integer limit
+    ){
+        return analyticService.productAnalysisByDateRange(storeId, from, to, productIds, limit);
+    }
+
+    @GetMapping("products/months/new")
+    public List<ProductInsightMonthDto> getProductsAnalysisByMonths(
+            @PathVariable("store-id") Long storeId,
+            @RequestParam(required = true, value = "year") Integer year,
+            @RequestParam(required = false, value= "lower-month") Integer lowerMonth,
+            @RequestParam(required = false, value= "upper-month") Integer upperMonth,
+            @RequestParam(required = false, value= "product-ids") List<Long> productIds,
+            @RequestParam(required = false, value = "limit") Integer limit
+    ){
+        return analyticService.productAnalysisByMonth(storeId, year, lowerMonth, upperMonth, productIds, limit);
     }
 
     @GetMapping("products/date-range")

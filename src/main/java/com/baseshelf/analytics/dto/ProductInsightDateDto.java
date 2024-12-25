@@ -10,11 +10,11 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Data
-@Builder
-@NoArgsConstructor
 @AllArgsConstructor
-public class BrandInsightDateDto {
+@NoArgsConstructor
+@Builder
+public class ProductInsightDateDto {
     private LocalDate date;
     private DayOfWeek weekDay;
-    private List<BrandInsight> analysis;
+    private List<ProductInsight> analysis;
 }
