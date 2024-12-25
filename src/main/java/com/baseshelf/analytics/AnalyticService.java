@@ -17,8 +17,7 @@ import org.springframework.stereotype.Service;
 import java.sql.Date;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -74,87 +73,79 @@ public class AnalyticService {
         return orderMonthDtos;
     }
 
-    public List<BrandMonthDto> totalAnalysisByBrandByYearAndMonth(Long storeId, Long brandId, Integer year, List<Integer> months) {
+    public List<BrandInsightMonthDto> brandInsightMonthDtoMapper(List<Object[]> results, Integer lowerMonth, Integer upperMonth) {
+        // Use LinkedHashMap to maintain month order
+        Map<Integer, BrandInsightMonthDto> insightMonthDtoMap = new LinkedHashMap<>();
+        // Ensure all months in the range are included, even if empty
+        for (int i = lowerMonth; i <= upperMonth; i++) {
+            insightMonthDtoMap.computeIfAbsent(
+                    i,
+                    m -> new BrandInsightMonthDto(m, getMonth(m), new ArrayList<>())
+            );
+        }
+        // Populate map only for months with data
+        for (Object[] result : results) {
+            Integer month = (Integer) result[0];
+            // Get or create the month DTO
+            BrandInsightMonthDto monthDto = insightMonthDtoMap.computeIfAbsent(
+                    month,
+                    m -> new BrandInsightMonthDto(m, getMonth(m), new ArrayList<>())
+            );
+            // Add the brand insight to the month's analysis
+            monthDto.getAnalysis().add(
+                    BrandInsight.builder()
+                            .brandId((Long) result[1])
+                            .brandName((String) result[2])
+                            .productCount((Long) result[3])
+                            .orderCount((Long) result[4])
+                            .quantity((Long) result[5])
+                            .revenue((Double) result[6])
+                            .build()
+            );
+        }
+        // Return the values as a list
+        return new ArrayList<>(insightMonthDtoMap.values());
+    }
+
+    public List<BrandInsightDateDto> brandInsightDateDtoMapper(List<Object[]> results, LocalDate from, LocalDate to){
+        Map<LocalDate, BrandInsightDateDto> brandInsightDateDtoMap = new LinkedHashMap<>();
+        while(from.isBefore(to) || from.isEqual(to)){
+            LocalDate date = from;
+            brandInsightDateDtoMap.computeIfAbsent(from, d->
+                    new BrandInsightDateDto(date, DayOfWeek.from(date), new ArrayList<>()));
+            from = from.plusDays(1);
+        }
+        for(Object[] result: results){
+            LocalDate date = (LocalDate) result[0];
+            BrandInsightDateDto brandInsight = brandInsightDateDtoMap.computeIfAbsent(date, d->
+                            new BrandInsightDateDto(date, DayOfWeek.from(date), new ArrayList<>()));
+            brandInsight.getBrandInsights().add(
+                BrandInsight.builder()
+                        .brandId((Long) result[1])
+                        .brandName((String) result[2])
+                        .productCount((Long) result[3])
+                        .orderCount((Long) result[4])
+                        .quantity((Long) result[5])
+                        .revenue((Double) result[6])
+                        .build());
+        }
+        return new ArrayList<>(brandInsightDateDtoMap.values());
+    }
+
+    public List<BrandInsightMonthDto> brandAnalysisByMonthRange(Long storeId, Integer year, Integer lowerMonth, Integer upperMonth, List<Long> brandIds){
         Store store = storeService.getById(storeId);
-        Brand brand = brandService.getBrandById(store, brandId);
-        List<Object[]> results = orderItemRepository.analysisByBrandByYearAndMonth(store, brand, year, months);
-        List<BrandMonthDto> analytics = results.stream()
-                .map(result -> {
-                    String month = getMonth((Integer) result[1]);
-                    return new BrandMonthDto((Long) result[0], month, (Long) result[2], (Long) result[3], (Long) result[4], (Double) result[5], null);
-                })
-                .toList();
-        calculateRevenue(analytics);
-        return analytics;
+        upperMonth = upperMonth == null? 12: upperMonth;
+        lowerMonth = lowerMonth == null? 1: lowerMonth;
+        List<Brand> brands = (brandIds == null || brandIds.isEmpty())? brandService.getAllBrandsByStore(storeId): brandService.getAllBrandsByStoreAndIds(store, brandIds);
+        List<Object[]> results = orderItemRepository.insightsOfBrandsByMonth(store, brands, year, lowerMonth, upperMonth);
+        return brandInsightMonthDtoMapper(results, lowerMonth, upperMonth);
     }
 
-    public List<BrandDateDto> totalAnalysisOfBrandByDateRange(Long storeId, Long brandId, LocalDate from, LocalDate to){
+    public List<BrandInsightDateDto> brandAnalysisByDateRange(Long storeId, LocalDate from, LocalDate to, List<Long> brandIds){
         Store store = storeService.getById(storeId);
-        Brand brand = brandService.getBrandById(store, brandId);
-
-        List<Object[]> results = orderItemRepository.analysisOfBrandByDateRange(store, brand, from, to);
-
-        List<BrandDateDto> analytics = results.stream()
-                .map(result ->{
-                    LocalDate date = (LocalDate) result[0];
-                    String weekDay = DayOfWeek.from(date).name();
-                    return new BrandDateDto(brandId, (LocalDate) result[0], (Long) result[1], (Long) result[2], (Double) result[3], weekDay);
-                })
-                .toList();
-
-        return analytics;
-    }
-
-    public List<BrandDateDto> totalAnalysisOfMultipleBrandsByDateRange(Long storeId, List<Long> brandIds, LocalDate from, LocalDate to){
-        Store store = storeService.getById(storeId);
-        List<Brand> brands = brandService.getAllBrandsByStoreAndIds(store, brandIds);
-
-        return performanceOfGivenBrandByDateRange(store, from, to, brands);
-    }
-
-    public List<BrandMonthDto> totalAnalysisOfMultipleBrandsByMonthYear(Long storeId, List<Long> brandIds, Integer year, List<Integer> months){
-        Store store = storeService.getById(storeId);
-        List<Brand> brands = brandService.getAllBrandsByStoreAndIds(store, brandIds);
-        return performanceOfBrandsByMonths(store, year, months, brands);
-    }
-
-    private List<BrandDateDto> performanceOfGivenBrandByDateRange( Store store, LocalDate from, LocalDate to, List<Brand> brands) {
-        List<Object[]> results = orderItemRepository.analysisOfMultipleBrandsByDateRange(store, brands, from, to);
-
-        List<BrandDateDto> analytics = results.stream()
-                .map(result ->{
-                    LocalDate date = (LocalDate) result[1];
-                    String weekDay = DayOfWeek.from(date).name();
-                    return new BrandDateDto((Long) result[0], (LocalDate) result[1], (Long) result[2], (Long) result[3], (Double) result[4], weekDay);
-                })
-                .toList();
-
-        return analytics;
-    }
-
-    public List<BrandDateDto> performanceOfAllBrandsByDateRange(Long storeId, LocalDate from, LocalDate to){
-        Store store = storeService.getById(storeId);
-        List<Brand> brands= brandService.getAllBrandsByStore(storeId);
-        return performanceOfGivenBrandByDateRange(store, from, to, brands);
-    }
-
-    public List<BrandMonthDto> performanceOfAllBrandsByMonth(Long storeId, Integer year, List<Integer> months){
-        Store store = storeService.getById(storeId);
-        List<Brand> brands = brandService.getAllBrandsByStore(storeId);
-        return performanceOfBrandsByMonths(store, year, months, brands);
-    }
-
-    private List<BrandMonthDto> performanceOfBrandsByMonths( Store store, Integer year, List<Integer> months, List<Brand> brands) {
-        List<Object[]> results = orderItemRepository.analysisOfMultipleBrandsByMonthYear(store, brands, year, months);
-
-        List<BrandMonthDto> analytics = results.stream()
-                .map(result ->{
-                    String month = getMonth((Integer) result[1]);
-                    return new BrandMonthDto((Long) result[0], month, (Long) result[2], (Long) result[3], (Long) result[4], (Double) result[5], null);
-                })
-                .toList();
-        calculateRevenue(analytics);
-        return analytics;
+        List<Brand> brands = (brandIds==null || brandIds.isEmpty()) ? brandService.getAllBrandsByStore(storeId) : brandService.getAllBrandsByStoreAndIds(store, brandIds);
+        List<Object[]> results = orderItemRepository.insightsOfBrandsByDateRange(store, brands, from, to);
+        return brandInsightDateDtoMapper(results, from, to);
     }
 
     public List<ProductDateDto> analysisOfProductsByDateRange(Long storeId, LocalDate from, LocalDate to){
@@ -269,21 +260,6 @@ public class AnalyticService {
             default :
                 throw new IllegalStateException("Unexpected value: " + month);
         };
-    }
-
-    private void calculateRevenue(List<BrandMonthDto> analytics) {
-        IntStream.range(0, analytics.size())
-                .forEach(i->{
-                    if(i==0){
-                        analytics.get(i).setProfitPercent(0D);
-                    }
-                    else{
-                        double previousMonthRevenue = analytics.get(i-1).getRevenue();
-                        double currentMonthRevenue = analytics.get(i).getRevenue();
-                        double profitPercent = previousMonthRevenue == 0 ? 0 : (currentMonthRevenue/previousMonthRevenue - 1) * 100;
-                        analytics.get(i).setProfitPercent(profitPercent);
-                    }
-                });
     }
 
 }

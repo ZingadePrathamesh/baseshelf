@@ -40,62 +40,25 @@ public class AnalyticController {
                 return analyticService.getRevenueForMonthsAndYear(storeId, year, months);
     }
 
-    @GetMapping("brands/{brand-id}/months")
-    public List<BrandMonthDto> getAnalysisForBrandByYearAndMonth(
+    @GetMapping("brands/months")
+    public List<BrandInsightMonthDto> getBrandAnalysisByMonths(
             @PathVariable("store-id") Long storeId,
-            @PathVariable("brand-id") Long brandId,
-            @RequestParam(value = "year") Integer year,
-            @RequestParam(value = "months") List<Integer> months
+            @RequestParam(required = true, value = "year") Integer year,
+            @RequestParam(required = false, value= "lower-month") Integer lowerMonth,
+            @RequestParam(required = false, value= "upper-month") Integer upperMonth,
+            @RequestParam(required = false, value= "brand-ids") List<Long> brandIds
     ){
-        return analyticService.totalAnalysisByBrandByYearAndMonth(storeId, brandId, year, months);
+        return analyticService.brandAnalysisByMonthRange(storeId, year, lowerMonth, upperMonth, brandIds);
     }
 
-    @GetMapping("multi-brands/months")
-    public List<BrandMonthDto> getAnalysisForMultiBrandByYearAndMonth(
+    @GetMapping("brands/date-range")
+    public List<BrandInsightDateDto> getBrandAnalysisByDateRange(
             @PathVariable("store-id") Long storeId,
-            @RequestParam(value = "brand-ids") List<Long> brandIds,
-            @RequestParam(value = "year") Integer year,
-            @RequestParam(value = "months") List<Integer> months
+            @RequestParam(required = true, value = "from") LocalDate from,
+            @RequestParam(required = true, value= "to") LocalDate to,
+            @RequestParam(required = false, value= "brand-ids") List<Long> brandIds
     ){
-        return analyticService.totalAnalysisOfMultipleBrandsByMonthYear(storeId, brandIds, year, months);
-    }
-
-    @GetMapping("brands/{brand-id}/date-range")
-    public List<BrandDateDto> getAnalysisForBrandByDateRange(
-            @PathVariable("store-id") Long storeId,
-            @PathVariable("brand-id") Long brandId,
-            @RequestParam(value = "from") LocalDate from,
-            @RequestParam(value = "to") LocalDate to
-    ){
-        return analyticService.totalAnalysisOfBrandByDateRange(storeId, brandId, from, to);
-    }
-
-    @GetMapping("multi-brands/date-range")
-    public List<BrandDateDto> getAnalysisForBrandByDateRange(
-            @PathVariable("store-id") Long storeId,
-            @RequestParam(value = "brand-ids") List<Long> brandIds,
-            @RequestParam(value = "from") LocalDate from,
-            @RequestParam(value = "to") LocalDate to
-    ){
-        return analyticService.totalAnalysisOfMultipleBrandsByDateRange(storeId, brandIds, from, to);
-    }
-
-    @GetMapping("/brands/months/performances")
-    public List<BrandMonthDto> getPerformanceOfBrandMonths(
-            @PathVariable("store-id") Long storeId,
-            @RequestParam(value = "year") Integer year,
-            @RequestParam(value = "months") List<Integer> months
-    ){
-        return analyticService.performanceOfAllBrandsByMonth(storeId, year, months);
-    }
-
-    @GetMapping("brands/date-range/performances")
-    public List<BrandDateDto> getPerformanceOfBrandMonths(
-            @PathVariable("store-id") Long storeId,
-            @RequestParam(value = "from") LocalDate from,
-            @RequestParam(value = "to") LocalDate to
-    ){
-        return analyticService.performanceOfAllBrandsByDateRange(storeId, from, to);
+        return analyticService.brandAnalysisByDateRange(storeId, from, to, brandIds);
     }
 
     @GetMapping("products/date-range")
