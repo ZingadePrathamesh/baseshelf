@@ -24,6 +24,12 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
+@Table(
+        indexes = {
+                @Index(name = "store_id", columnList = "store_id"),
+                @Index(name = "brand_id", columnList = "brand_id")
+        }
+)
 public class Product extends BaseEntity {
 
     @Size(max = 500, message = "Description must not exceed 500 characters")

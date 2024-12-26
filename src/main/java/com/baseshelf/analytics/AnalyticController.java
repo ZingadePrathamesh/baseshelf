@@ -83,25 +83,27 @@ public class AnalyticController {
         return analyticService.productAnalysisByMonth(storeId, year, lowerMonth, upperMonth, productIds, limit);
     }
 
+    @GetMapping("categories/months")
+    public List<CategoryInsightMonthDto> getProductAnalysisByMonths(
+            @PathVariable("store-id") Long storeId,
+            @RequestParam(value = "year", required = true) Integer year,
+            @RequestParam(value = "lower-month", required = false) Integer lowerMonth,
+            @RequestParam(value = "upper-month", required = false) Integer upperMonth,
+            @RequestParam(value = "category-ids", required = false) List<Long> categoryIds,
+            @RequestParam(value = "limit", required = false) Integer limit
+    ){
+        return analyticService.categoryAnalysisByMonth(storeId, year, lowerMonth, upperMonth, categoryIds, limit);
+    }
+
     @GetMapping("categories/date-range")
-    public List<CategoryDateDto> getProductDataByDateRange(
+    public List<CategoryInsightDateDto> getProductAnalysisByDateRange(
             @PathVariable("store-id") Long storeId,
             @RequestParam(value = "from") LocalDate from,
             @RequestParam(value = "to") LocalDate to,
-            @RequestParam(value = "categories") List<Long> categories
+            @RequestParam(value = "category-ids", required = false) List<Long> categoryIds,
+            @RequestParam(value = "limit", required = false) Integer limit
     ){
-        return analyticService.analysisOfCategoryWiseSalesByDateRange(storeId, from, to, categories);
+        return analyticService.categoryAnalysisByDateRange(storeId, from, to, categoryIds, limit);
     }
-
-    @GetMapping("categories/months")
-    public List<CategoryMonthDto> getTopProductDataByMonths(
-            @PathVariable("store-id") Long storeId,
-            @RequestParam(value = "year") Integer year,
-            @RequestParam(value = "months") List<Integer> months,
-            @RequestParam(value = "categories") List<Long> categories
-    ){
-        return analyticService.analysisOfCategoryWiseSalesByDateRange(storeId, year, months, categories);
-    }
-
 
 }

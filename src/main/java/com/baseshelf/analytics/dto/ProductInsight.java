@@ -11,11 +11,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class ProductInsight {
-    private Long    productId;
-    private String  productName;
-    private Float  sellingPrice;
+    private Long    id;
+    private String  name;
+    private Float   sellingPrice;
     private Long    quantity;
     private Long    orderCount;
-    private Float  revenue;
-    private Long   brand;
+    private Float   revenue;
+    private Long    brandId;
+    private String  brandName;
 }

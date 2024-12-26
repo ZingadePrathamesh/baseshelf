@@ -3,17 +3,11 @@ package com.baseshelf.analytics;
 import com.baseshelf.analytics.dto.*;
 import com.baseshelf.brand.Brand;
 import com.baseshelf.brand.BrandService;
-import com.baseshelf.category.Category;
-import com.baseshelf.category.CategoryService;
 import com.baseshelf.order.OrderItemRepository;
 import com.baseshelf.order.ProductOrderRepository;
-import com.baseshelf.product.Product;
-import com.baseshelf.product.ProductRepository;
-import com.baseshelf.product.ProductService;
 import com.baseshelf.store.Store;
 import com.baseshelf.store.StoreService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 import java.sql.Date;
@@ -33,9 +27,6 @@ public class AnalyticService {
     private final ProductOrderRepository productOrderRepository;
     private final BrandService brandService;
     private final OrderItemRepository orderItemRepository;
-    private final ProductRepository productRepository;
-    private final ProductService productService;
-    private final CategoryService categoryService;
 
     public List<OrderDateDto> getRevenueByDate(Long storeId, LocalDate date) {
         Store store = storeService.getById(storeId);
@@ -168,13 +159,14 @@ public class AnalyticService {
 
             insightMonthDto.getAnalysis().add(
                     ProductInsight.builder()
-                            .productId((Long) result[1])
-                            .productName((String) result[2])
+                            .id((Long) result[1])
+                            .name((String) result[2])
                             .sellingPrice((Float) result[3])
                             .quantity((Long) result[4])
                             .orderCount((Long) result[5])
                             .revenue((Float) result[6])
-                            .brand((Long) result[7])
+                            .brandId((Long) result[7])
+                            .brandName((String) result[8])
                             .build()
             );
         }
@@ -197,13 +189,14 @@ public class AnalyticService {
 
             insightDateDto.getAnalysis().add(
                     ProductInsight.builder()
-                            .productId((Long) result[1])
-                            .productName((String) result[2])
+                            .id((Long) result[1])
+                            .name((String) result[2])
                             .sellingPrice((Float) result[3])
                             .quantity((Long) result[4])
                             .orderCount((Long) result[5])
                             .revenue((Float) result[6])
-                            .brand((Long) result[7])
+                            .brandId((Long) result[7])
+                            .brandName((String) result[8])
                             .build()
             );
         }
@@ -226,7 +219,6 @@ public class AnalyticService {
     }
 
     public List<ProductInsightDateDto> productAnalysisByDateRange(Long storeId, LocalDate from, LocalDate to, List<Long> productIds, Integer limit){
-        Store store = storeService.getById(storeId);
         List<Object[]> results;
         limit = (limit == null) ? 50 : limit ;
         if(productIds == null || productIds.isEmpty()){
@@ -237,32 +229,88 @@ public class AnalyticService {
         return productInsightDateMapper(results, from, to);
     }
 
-    public List<CategoryDateDto> analysisOfCategoryWiseSalesByDateRange(Long storeId, LocalDate from, LocalDate to, List<Long> categories){
+    public List<CategoryInsightMonthDto> categoryInsightMonthMapper(List<Object[]> results, Integer lowerMonth, Integer upperMonth){
+        Map<Integer, CategoryInsightMonthDto> linkedHashMap = new LinkedHashMap<>();
+
+        for(int i = lowerMonth; i <= upperMonth; i++){
+            linkedHashMap.computeIfAbsent(i, m-> new CategoryInsightMonthDto(m, getMonth(m), new ArrayList<>()));
+        }
+
+        for(Object[] result : results){
+            Integer month = ((Double) result[0]).intValue();
+            CategoryInsightMonthDto dto = linkedHashMap.computeIfAbsent(month,
+                    m -> new CategoryInsightMonthDto(m, getMonth(m), new ArrayList<>()));
+
+            dto.getAnalysis().add(
+                    CategoryInsight.builder()
+                            .id((Long) result[1])
+                            .name((String) result[2])
+                            .productCount((Long) result[3])
+                            .orderCount((Long) result[4])
+                            .quantity((Long) result[5])
+                            .revenue(((Float) result[6]).doubleValue())
+                            .build()
+            );
+        }
+        return new ArrayList<>(linkedHashMap.values());
+    }
+
+    private List<CategoryInsightDateDto> categoryInsightDateMapper(List<Object[]> results, LocalDate from, LocalDate to) {
+        Map<LocalDate, CategoryInsightDateDto> linkedHashMap = new LinkedHashMap<>();
+
+        while(from.isBefore(to) || from.isEqual(to)){
+            linkedHashMap.computeIfAbsent(from, d ->
+                    new CategoryInsightDateDto(d, DayOfWeek.from(d), new ArrayList<>()));
+            from = from.plusDays(1);
+        }
+
+        for(Object[] result : results){
+            LocalDate date = ((Date) result[0]).toLocalDate();
+            CategoryInsightDateDto insightDateDto = linkedHashMap.computeIfAbsent(date, d ->
+                    new CategoryInsightDateDto(d, DayOfWeek.from(d), new ArrayList<>()));
+
+            insightDateDto.getAnalysis().add(
+                    CategoryInsight.builder()
+                            .id((Long) result[1])
+                            .name((String) result[2])
+                            .productCount((Long) result[3])
+                            .orderCount((Long) result[4])
+                            .quantity((Long) result[5])
+                            .revenue(((Float) result[6]).doubleValue())
+                            .build()
+            );
+        }
+        return new ArrayList<>(linkedHashMap.values());
+    }
+
+    public List<CategoryInsightMonthDto> categoryAnalysisByMonth(Long storeId, Integer year, Integer lowerMonth, Integer upperMonth, List<Long> categoryIds, Integer limit){
         Store store = storeService.getById(storeId);
-        System.out.println(categories);
-        List<Object[]> results = productRepository.findCategorySalesAnalysis(store, from, to, categories, categories.size());
+        upperMonth = upperMonth == null? 12: upperMonth;
+        lowerMonth = lowerMonth == null? 1: lowerMonth;
+        limit = limit == null?50:limit;
+        List<Object[]> results = null;
 
-        return results.stream()
-                .map(result->{
-                    return new CategoryDateDto((LocalDate) result[0], (Long) result[1], (Float) result[2]
-                    , (Long) result[3], (Double) result[4], (Brand) result[5], null);
-                })
-                .toList();
-    };
+        if(categoryIds == null || categoryIds.isEmpty()){
+            results = orderItemRepository.insightsOfCategoryMonth(storeId, year, lowerMonth, upperMonth, limit);
+        }else{
+            results = orderItemRepository.insightsOfCategoryMonth(storeId, year, lowerMonth, upperMonth, categoryIds, limit);
+        }
 
-    public List<CategoryMonthDto> analysisOfCategoryWiseSalesByDateRange(Long storeId, Integer year, List<Integer> months, List<Long> categories){
-        Store store = storeService.getById(storeId);
-        System.out.println(categories);
-        List<Object[]> results = productRepository.findCategoryAnalysisByMonth(store, year, months, categories, categories.size());
+        return categoryInsightMonthMapper(results, lowerMonth, upperMonth);
+    }
 
-        return results.stream()
-                .map(result->{
-                    String month = getMonth((Integer) result[0]);
-                    return new CategoryMonthDto(month, (Long) result[1], (Float) result[2]
-                    , (Long) result[3], (Double) result[4], (Brand) result[5], null);
-                })
-                .toList();
-    };
+    public List<CategoryInsightDateDto> categoryAnalysisByDateRange(Long storeId, LocalDate from, LocalDate to, List<Long> categoryIds, Integer limit){
+        List<Object[]> results;
+        limit = (limit == null) ? 50 : limit ;
+        if(categoryIds == null || categoryIds.isEmpty()){
+            results = orderItemRepository.insightsOfCategoryDateRange(storeId, from, to, limit);
+        }else{
+            results = orderItemRepository.insightsOfCategoryDateRange(storeId, from, to, categoryIds, limit);
+        }
+
+        return categoryInsightDateMapper(results, from, to);
+    }
+
 
     public static String getMonth(int month){
         return switch (month){

@@ -122,12 +122,11 @@ public class ProductService {
     public List<Product> getAllProductsByCategories(Long storeId, List<Long> categoryIds){
         Store store = storeService.getById(storeId);
 
-        long categoryCount = (long) categoryIds.size();
+        long categoryCount = categoryIds.size();
         return productRepository.findByAllCategoryIdsAndStore(store, categoryIds, categoryCount);
     }
 
     public List<Product> getAllProductsByStoreAndFilter(Long storeId, ProductFilter productFilter) {
-        Store store = storeService.getById(storeId);
         return productRepository.findAll(dynamicProductFilter(storeId, productFilter));
     }
 

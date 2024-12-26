@@ -16,7 +16,6 @@ import java.util.Optional;
 @Repository
 public interface ProductOrderRepository extends JpaRepository<ProductOrder, Long>, JpaSpecificationExecutor<ProductOrder>{
     List<ProductOrderResponse> findAllByStore(Store store);
-    Optional<ProductOrderResponse> findResponseByStoreAndId(Store store, Long id);
     Optional<ProductOrder> findByStoreAndId(Store store, Long orderId);
 
     @Transactional

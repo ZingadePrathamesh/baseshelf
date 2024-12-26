@@ -3,10 +3,7 @@ package com.baseshelf.order;
 import com.baseshelf.product.Product;
 import com.baseshelf.utils.BaseEntity;
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
@@ -22,6 +19,9 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true)
+@Table(
+        indexes = {@Index(columnList = "created_on", name = "created_on", unique = false)}
+)
 public class OrderItem extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.EAGER)
