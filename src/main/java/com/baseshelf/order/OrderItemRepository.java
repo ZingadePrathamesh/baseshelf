@@ -46,7 +46,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
                 COUNT(DISTINCT oi.order_id) AS orders, 
                 SUM(oi.amount) AS revenue, 
                 p.brand_id AS brand, 
-                ROW_NUMBER() OVER (PARTITION BY date_part('month', oi.created_on) ORDER BY SUM(oi.quantity) DESC) AS rank
+                ROW_NUMBER() OVER (PARTITION BY date_part('month', oi.created_on) ORDER BY SUM(oi.quantity) DESC, SUM(oi.amount) DESC) AS rank
             FROM order_item oi
             INNER JOIN product p ON oi.product_id = p.id 
             WHERE p.store_id = :storeId 
@@ -72,7 +72,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
                 COUNT(DISTINCT oi.order_id) AS orders, 
                 SUM(oi.amount) AS revenue, 
                 p.brand_id AS brand, 
-                ROW_NUMBER() OVER (PARTITION BY date_part('month', oi.created_on) ORDER BY SUM(oi.quantity) DESC) AS rank
+                ROW_NUMBER() OVER (PARTITION BY date_part('month', oi.created_on) ORDER BY SUM(oi.quantity) DESC, SUM(oi.amount) DESC) AS rank
             FROM order_item oi
             INNER JOIN product p ON oi.product_id = p.id 
             WHERE p.store_id = :storeId 
@@ -97,7 +97,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
                 COUNT(DISTINCT oi.order_id) AS orders, 
                 SUM(oi.amount) AS revenue, 
                 p.brand_id AS brand, 
-                ROW_NUMBER() OVER (PARTITION BY oi.created_on ORDER BY SUM(oi.quantity) DESC) AS rank
+                ROW_NUMBER() OVER (PARTITION BY oi.created_on ORDER BY SUM(oi.quantity) DESC, SUM(oi.amount) DESC) AS rank
             FROM order_item oi
             INNER JOIN product p ON oi.product_id = p.id 
             WHERE p.store_id = :storeId 
@@ -122,7 +122,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
                 COUNT(DISTINCT oi.order_id) AS orders, 
                 SUM(oi.amount) AS revenue, 
                 p.brand_id AS brand, 
-                ROW_NUMBER() OVER (PARTITION BY oi.created_on ORDER BY SUM(oi.quantity) DESC) AS rank
+                ROW_NUMBER() OVER (PARTITION BY oi.created_on ORDER BY SUM(oi.quantity) DESC, SUM(oi.amount) DESC) AS rank
             FROM order_item oi
             INNER JOIN product p ON oi.product_id = p.id 
             WHERE p.store_id = :storeId 

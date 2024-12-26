@@ -60,7 +60,7 @@ public class AnalyticController {
         return analyticService.brandAnalysisByDateRange(storeId, from, to, brandIds);
     }
 
-    @GetMapping("products/date-range/new")
+    @GetMapping("products/date-range")
     public List<ProductInsightDateDto> getProductsAnalysisByDateRange(
             @PathVariable("store-id") Long storeId,
             @RequestParam(required = true, value = "from") LocalDate from,
@@ -71,7 +71,7 @@ public class AnalyticController {
         return analyticService.productAnalysisByDateRange(storeId, from, to, productIds, limit);
     }
 
-    @GetMapping("products/months/new")
+    @GetMapping("products/months")
     public List<ProductInsightMonthDto> getProductsAnalysisByMonths(
             @PathVariable("store-id") Long storeId,
             @RequestParam(required = true, value = "year") Integer year,
@@ -81,44 +81,6 @@ public class AnalyticController {
             @RequestParam(required = false, value = "limit") Integer limit
     ){
         return analyticService.productAnalysisByMonth(storeId, year, lowerMonth, upperMonth, productIds, limit);
-    }
-
-    @GetMapping("products/date-range")
-    public List<ProductDateDto> getProductDataByDateRange(
-            @PathVariable("store-id") Long storeId,
-            @RequestParam(value = "from") LocalDate from,
-            @RequestParam(value = "to") LocalDate to
-    ){
-        return analyticService.analysisOfProductsByDateRange(storeId, from, to);
-    }
-
-    @GetMapping("products/date-range/top")
-    public List<CategoryDateDto> getProductDataByDateRange(
-            @PathVariable("store-id") Long storeId,
-            @RequestParam(value = "from") LocalDate from,
-            @RequestParam(value = "to") LocalDate to,
-            @RequestParam(value = "top") Integer top
-    ){
-        return analyticService.analysisOfTopProductsByDateRange(storeId, from, to, top);
-    }
-
-    @GetMapping("products/months")
-    public List<ProductMonthDto> getProductDataByMonths(
-            @PathVariable("store-id") Long storeId,
-            @RequestParam(value = "year") Integer year,
-            @RequestParam(value = "months") List<Integer> months
-    ){
-        return analyticService.analysisOfProductsByMonths(storeId, year, months);
-    }
-
-    @GetMapping("products/months/top")
-    public List<ProductMonthDto> getTopProductDataByMonths(
-            @PathVariable("store-id") Long storeId,
-            @RequestParam(value = "year") Integer year,
-            @RequestParam(value = "months") List<Integer> months,
-            @RequestParam(value = "top") Integer top
-    ){
-        return analyticService.analysisOfTopProductsByMonths(storeId, year, months, top);
     }
 
     @GetMapping("categories/date-range")
