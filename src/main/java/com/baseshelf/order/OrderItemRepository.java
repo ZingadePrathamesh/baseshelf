@@ -1,6 +1,7 @@
 package com.baseshelf.order;
 
 import com.baseshelf.brand.Brand;
+import com.baseshelf.report.dto.OrderItemReport;
 import com.baseshelf.store.Store;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -248,4 +249,20 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
         ORDER BY date DESC, rank  
             """, nativeQuery = true)
     List<Object[]> insightsOfCategoryDateRange(Long storeId, LocalDate from, LocalDate to, List<Long> categoryIds, Integer limit);
+
+    @Query(
+            """
+            SELECT new com.baseshelf.report.dto.OrderItemReport(
+                oi.createdOn, 
+                oi.id, 
+                oi.product.id, 
+                oi.quantity, 
+                oi.productOrder.id, 
+                oi.amount
+            ) 
+            FROM OrderItem oi 
+            ORDER BY oi.createdOn DESC
+            """
+    )
+    List<OrderItemReport> getAllOrderItems();
 }
