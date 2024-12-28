@@ -101,10 +101,6 @@ public class CategoryService {
         return categoryJpaRepository.findAll(dynamicFilterByParams(storeId, categoryId, paramName, paramCategoryType));
     }
 
-    public List<Category> getAllCategories() {
-        return categoryJpaRepository.findAll();
-    }
-
     public List<Category> getAllByStoreAndIdIn(Long storeId, List<Long> ids){
         Store store = storeService.getById(storeId);
         return categoryJpaRepository.findAllByStoreAndIdIn(store, ids);
