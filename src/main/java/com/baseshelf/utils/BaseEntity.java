@@ -43,9 +43,4 @@ public class BaseEntity {
         this.lastModifiedOn = LocalDate.now();
         this.isActive = true;
     }
-
-    @PostPersist
-    public void setValuesPostPersist(){
-        this.lastModifiedOn = LocalDate.now();
-    }
 }
