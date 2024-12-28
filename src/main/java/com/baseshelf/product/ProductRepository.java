@@ -17,9 +17,10 @@ import java.util.Set;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
 
-    @Query("SELECT p FROM Product p WHERE NOT EXISTS " +
+    @Query("SELECT p FROM Product p WHERE p.store = :store " +
+            " AND NOT EXISTS " +
             "(SELECT c FROM p.categories c WHERE c.categoryType = :categoryType)")
-    List<Product> findAllWithoutCategoryType(@Param("categoryType") String categoryType);
+    List<Product> findAllWithoutCategoryType(Store store, @Param("categoryType") String categoryType);
 
     Optional<Product> findByIdAndStore(Long productId, Store store);
 

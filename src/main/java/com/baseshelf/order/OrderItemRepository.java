@@ -250,19 +250,26 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
             """, nativeQuery = true)
     List<Object[]> insightsOfCategoryDateRange(Long storeId, LocalDate from, LocalDate to, List<Long> categoryIds, Integer limit);
 
-    @Query(
-            """
+    @Query(value = """
             SELECT new com.baseshelf.report.dto.OrderItemReport(
-                oi.createdOn, 
-                oi.id, 
-                oi.product.id, 
-                oi.quantity, 
                 oi.productOrder.id, 
-                oi.amount
-            ) 
-            FROM OrderItem oi 
-            ORDER BY oi.createdOn DESC
-            """
-    )
-    List<OrderItemReport> getAllOrderItems();
+                oi.id, 
+                oi.createdOn,
+                p.id,  
+                p.name, 
+                p.sellingPrice, 
+                oi.quantity, 
+                oi.amount, 
+                b.id, 
+                b.name 
+            )  
+            FROM OrderItem oi
+            INNER JOIN Product p ON p = oi.product 
+            INNER JOIN Brand b ON b = p.brand 
+            WHERE p.store = :store 
+            AND oi.createdOn BETWEEN :from AND :to
+            ORDER BY oi.createdOn DESC 
+            LIMIT :limit 
+            """)
+    List<OrderItemReport> getSalesReportByDateRange(Store store, LocalDate from, LocalDate to, Integer limit);
 }

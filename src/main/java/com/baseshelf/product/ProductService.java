@@ -82,7 +82,7 @@ public class ProductService {
                         .sgst(18.0F)
                         .costPrice(costPrize)
                         .sellingPrice(sellingPrize)
-                        .isTaxed(true)
+                        .taxed(true)
                         .quantity(faker.number().numberBetween(10, 100))
                         .isActive(true)
                         .brand(brands.get(faker.number().numberBetween(0, brands.size()-1)))
@@ -124,6 +124,11 @@ public class ProductService {
 
         long categoryCount = categoryIds.size();
         return productRepository.findByAllCategoryIdsAndStore(store, categoryIds, categoryCount);
+    }
+
+    public List<Product> getAllProductsWithoutCategories(Long storeId, String categoryType) {
+        Store store = storeService.getById(storeId);
+        return productRepository.findAllWithoutCategoryType(store, categoryType);
     }
 
     public List<Product> getAllProductsByStoreAndFilter(Long storeId, ProductFilter productFilter) {
@@ -170,7 +175,7 @@ public class ProductService {
                 .stream()
                 .map(Category::getId)
                 .toList();
-        Set<Category> categories = categoryService.getAllByStoreAndIdIn(storeId, categoryIds);
+        List<Category> categories = categoryService.getAllByStoreAndIdIn(storeId, categoryIds);
 
         product.setStore(store);
         product.setBrand(brand);
@@ -234,7 +239,7 @@ public class ProductService {
         List<Long> categoryIds = product.getCategories().stream()
                 .map(Category::getId)
                 .toList();
-        Set<Category> categories = categoryService.getAllByStoreAndIdIn(storeId, categoryIds);
+        List<Category> categories = categoryService.getAllByStoreAndIdIn(storeId, categoryIds);
 
         Product oldProduct = this.getByIdAndStore(productId, storeId);
         oldProduct.setName(product.getName());
@@ -282,19 +287,19 @@ public class ProductService {
             }
 
             // Filter by quantity range
-            if (productFilter.getLowerQuantityRange() != null) {
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("quantity"), productFilter.getLowerQuantityRange()));
+            if (productFilter.getLowerQuantity() != null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("quantity"), productFilter.getLowerQuantity()));
             }
-            if (productFilter.getHigherQuantityRange() != null) {
-                predicates.add(criteriaBuilder.lessThan(root.get("quantity"), productFilter.getHigherQuantityRange()));
+            if (productFilter.getHigherQuantity() != null) {
+                predicates.add(criteriaBuilder.lessThan(root.get("quantity"), productFilter.getHigherQuantity()));
             }
 
             // Filter by price range
-            if (productFilter.getLowerPriceRange() != null) {
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("sellingPrice"), productFilter.getLowerPriceRange()));
+            if (productFilter.getLowerPrice() != null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("sellingPrice"), productFilter.getLowerPrice()));
             }
-            if (productFilter.getHigherPriceRange() != null) {
-                predicates.add(criteriaBuilder.lessThan(root.get("sellingPrice"), productFilter.getHigherPriceRange()));
+            if (productFilter.getHigherPrice() != null) {
+                predicates.add(criteriaBuilder.lessThan(root.get("sellingPrice"), productFilter.getHigherPrice()));
             }
 
             // Filter by brand
@@ -304,19 +309,19 @@ public class ProductService {
             }
 
             // Filter by CGST/SGST rates
-            if (productFilter.getCgstRate() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("cgst"), productFilter.getCgstRate()));
+            if (productFilter.getCgst() != null) {
+                predicates.add(criteriaBuilder.equal(root.get("cgst"), productFilter.getCgst()));
             }
-            if (productFilter.getSgstRate() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("sgst"), productFilter.getSgstRate()));
+            if (productFilter.getSgst() != null) {
+                predicates.add(criteriaBuilder.equal(root.get("sgst"), productFilter.getSgst()));
             }
 
             // Filter by lastModifiedOn date range
-            if (productFilter.getFromDate() != null) {
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("lastModifiedOn"), productFilter.getFromDate()));
+            if (productFilter.getFrom() != null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("lastModifiedOn"), productFilter.getFrom()));
             }
-            if (productFilter.getToDate() != null) {
-                predicates.add(criteriaBuilder.lessThan(root.get("lastModifiedOn"), productFilter.getToDate()));
+            if (productFilter.getTo() != null) {
+                predicates.add(criteriaBuilder.lessThan(root.get("lastModifiedOn"), productFilter.getTo()));
             }
 
             // Filter by categories (ensure all categories are matched)
@@ -340,4 +345,5 @@ public class ProductService {
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
     }
+
 }

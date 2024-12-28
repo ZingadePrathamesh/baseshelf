@@ -36,15 +36,23 @@ public class ProductController {
     @GetMapping("categories")
     public List<Product> getProductsByCategories(
             @PathVariable(name = "store-id") Long storeId,
-            @RequestBody List<Long> categoryId
+            @RequestParam(value = "category-ids", required = true) List<Long> categoryId
     ){
         return productService.getAllProductsByCategories(storeId, categoryId);
+    }
+
+    @GetMapping("categories/without-type")
+    public List<Product> getProductsWithoutCategories(
+            @PathVariable(name = "store-id") Long storeId,
+            @RequestParam(value = "category-type", required = true) String categoryType
+    ){
+        return productService.getAllProductsWithoutCategories(storeId, categoryType);
     }
 
     @GetMapping("filters")
     public List<Product> getProductsByFilter(
             @PathVariable(name = "store-id") Long storeId,
-            @ModelAttribute ProductFilter productFilter
+            @ModelAttribute @Valid ProductFilter productFilter
     ){
         return productService.getAllProductsByStoreAndFilter(storeId, productFilter);
     }
@@ -52,9 +60,8 @@ public class ProductController {
     @GetMapping("/multiple")
     public List<Product> getProductsByIds(
             @PathVariable(name = "store-id") Long storeId,
-            @RequestBody Set<Long> productIds
+            @RequestParam(value = "product-ids") Set<Long> productIds
     ){
-
         return productService.getAllByStoreAndIds(storeId, productIds);
     }
 

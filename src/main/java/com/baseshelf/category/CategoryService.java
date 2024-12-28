@@ -35,59 +35,57 @@ public class CategoryService {
     ){
         return args -> {
           Store store = storeService.getByEmail("johndoe@gmail.com");
-          Store store1 = storeService.getByEmail("smartit@gmail.com");
-          Faker faker = new Faker();
-          Set<Category> categories = new HashSet<>();
-
-          //inserting colors
-          for(int i = 0; i< 100;i ++){
-              Category category = Category.builder()
-                      .global(true)
-                      .store(store)
-                      .categoryType("COLOR")
-                      .name(faker.color().name())
-                      .build();
-              categories.add(category);
-          }
-
-          //inserting materials
-          List<String> materials = List.of("Cotton", "Silk", "Linen", "Wool", "Polyester", "Denim", "Rug");
-          for(String m: materials){
-              Category category = Category.builder()
-                      .global(true)
-                      .store(store)
-                      .categoryType("MATERIAL")
-                      .name(m)
-                      .build();
-              categories.add(category);
-          }
-
-          //inserting product type
-          List<String> productTypes = List.of("Shirt", "Tshirt", "Jeans", "Pants", "Trousers", "Cargo", "Tracks", "Paijama");
-            for(String pT: productTypes){
-                Category category = Category.builder()
-                        .global(true)
-                        .store(store)
-                        .categoryType("PRODUCT TYPE")
-                        .name(pT)
-                        .build();
-                categories.add(category);
-            }
-
-            //inserting sizes
-            List<String> sizes = List.of("XXS", "XS", "S", "M", "L", "XL", "XXL");
-            for(String s: sizes){
-                Category category = Category.builder()
-                        .global(true)
-                        .store(store)
-                        .categoryType("SIZE")
-                        .name(s)
-                        .build();
-                categories.add(category);
-            }
-
-          categoryJpaRepository.saveAll(categories);
+          saveGlobalCategoriesForStore(store);
         };
+    }
+
+    public void saveGlobalCategoriesForStore(Store store){
+        Faker faker = new Faker();
+        Set<Category> categories = new HashSet<>();
+        //inserting colors
+        for(int i = 0; i< 100;i ++){
+            Category category = Category.builder()
+                    .store(store)
+                    .categoryType("COLOR")
+                    .name(faker.color().name())
+                    .build();
+            categories.add(category);
+        }
+
+        //inserting materials
+        List<String> materials = List.of("Cotton", "Silk", "Linen", "Wool", "Polyester", "Denim", "Rug");
+        for(String m: materials){
+            Category category = Category.builder()
+                    .store(store)
+                    .categoryType("MATERIAL")
+                    .name(m)
+                    .build();
+            categories.add(category);
+        }
+
+        //inserting product type
+        List<String> productTypes = List.of("Shirt", "Tshirt", "Jeans", "Pants", "Trousers", "Cargo", "Tracks", "Paijama");
+        for(String pT: productTypes){
+            Category category = Category.builder()
+                    .store(store)
+                    .categoryType("PRODUCT TYPE")
+                    .name(pT)
+                    .build();
+            categories.add(category);
+        }
+
+        //inserting sizes
+        List<String> sizes = List.of("XXS", "XS", "S", "M", "L", "XL", "XXL");
+        for(String s: sizes){
+            Category category = Category.builder()
+                    .store(store)
+                    .categoryType("SIZE")
+                    .name(s)
+                    .build();
+            categories.add(category);
+        }
+
+        categoryJpaRepository.saveAll(categories);
     }
 
     //Saves a category if not already present. Otherwise returns the old.
@@ -96,7 +94,6 @@ public class CategoryService {
         Optional<Category> categoryOpt = categoryJpaRepository.findByStoreAndNameAndCategoryType
                 (store, paramCategory.getName(), paramCategory.getCategoryType());
         paramCategory.setStore(store);
-        paramCategory.setGlobal(false);
         return categoryOpt.orElseGet(() -> categoryJpaRepository.save(paramCategory));
     }
 
@@ -108,24 +105,9 @@ public class CategoryService {
         return categoryJpaRepository.findAll();
     }
 
-    public List<Category> getAllGlobalCategories(){
-        return categoryJpaRepository.findAllByGlobal(true);
-    }
-
-    public Set<Category> getAllByStoreAndIdIn(Long storeId, List<Long> ids){
-        Set<Category> categories = new HashSet<>();
-        for(Long id: ids){
-            categories.add(this.getByCategoryId(storeId, id));
-        }
-        return categories;
-    }
-
-    public List<Category> getAllByStoreIdAndGlobal(Long storeId, boolean global) {
+    public List<Category> getAllByStoreAndIdIn(Long storeId, List<Long> ids){
         Store store = storeService.getById(storeId);
-        if(global){
-            return categoryJpaRepository.findAllByStoreOrGlobal(store, true);
-        }
-        else return categoryJpaRepository.findAllByStore(store);
+        return categoryJpaRepository.findAllByStoreAndIdIn(store, ids);
     }
 
     public Category getByCategoryId(Long storeId, Long categoryId){
@@ -190,5 +172,10 @@ public class CategoryService {
 
           return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
+    }
+
+    public List<Category> getAllByStore(Long storeId) {
+        Store store = storeService.getById(storeId);
+        return categoryJpaRepository.findAllByStore(store);
     }
 }

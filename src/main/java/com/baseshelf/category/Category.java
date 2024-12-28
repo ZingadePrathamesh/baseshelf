@@ -53,7 +53,4 @@ public class Category {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @NotNull(message = "Store cannot be null")
     private Store store;
-
-    @JsonIgnore
-    private boolean global;
 }

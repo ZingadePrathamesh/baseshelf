@@ -12,21 +12,10 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @GetMapping("/all")
-    public List<Category> getAllCategories(){
-        return categoryService.getAllCategories();
-    }
-
-    @GetMapping("/globals")
-    public List<Category> getAllClobalCategories(){
-        return categoryService.getAllGlobalCategories();
-    }
-
-    @GetMapping("")
-    public List<Category> getAllCategoriesByStore(
-            @PathVariable(name = "store-id") Long storeId,
-            @RequestParam(name = "global", required = false) boolean global
+    public List<Category> getAllCategories(
+            @PathVariable(name = "store-id") Long storeId
     ){
-        return categoryService.getAllByStoreIdAndGlobal(storeId, global);
+        return categoryService.getAllByStore(storeId);
     }
 
     @GetMapping("category-id/{category-id}")

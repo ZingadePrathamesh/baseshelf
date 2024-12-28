@@ -1,10 +1,13 @@
 package com.baseshelf.analytics.dto;
 
 import com.baseshelf.brand.Brand;
+import com.baseshelf.category.Category;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Data
 @AllArgsConstructor

@@ -106,4 +106,12 @@ public class AnalyticController {
         return analyticService.categoryAnalysisByDateRange(storeId, from, to, categoryIds, limit);
     }
 
+    @GetMapping("inventory-worth")
+    public InventoryWorthDto getInventoryWorth(
+            @PathVariable("store-id") Long storeId
+    ){
+        return analyticService.currentInventoryWorth(storeId);
+    }
+
+
 }

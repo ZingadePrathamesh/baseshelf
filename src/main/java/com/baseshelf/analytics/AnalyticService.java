@@ -3,6 +3,8 @@ package com.baseshelf.analytics;
 import com.baseshelf.analytics.dto.*;
 import com.baseshelf.brand.Brand;
 import com.baseshelf.brand.BrandService;
+import com.baseshelf.category.Category;
+import com.baseshelf.category.CategoryService;
 import com.baseshelf.order.OrderItemRepository;
 import com.baseshelf.order.ProductOrderRepository;
 import com.baseshelf.store.Store;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.sql.Date;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -27,6 +30,7 @@ public class AnalyticService {
     private final ProductOrderRepository productOrderRepository;
     private final BrandService brandService;
     private final OrderItemRepository orderItemRepository;
+    private final CategoryService categoryService;
 
     public List<OrderDateDto> getRevenueByDate(Long storeId, LocalDate date) {
         Store store = storeService.getById(storeId);
@@ -311,6 +315,31 @@ public class AnalyticService {
         return categoryInsightDateMapper(results, from, to);
     }
 
+    public List<InventoryWorthInsight> currentInvestedAmount(Long storeId){
+        Store store = storeService.getById(storeId);
+        List<InventoryWorthInsight> worthInsights = productOrderRepository.currentInvestedAmount(store);
+        return worthInsights;
+    }
+
+    public InventoryWorthDto currentInventoryWorth(Long storeId){
+        Store store = storeService.getById(storeId);
+        List<InventoryWorthInsight> worthInsights = productOrderRepository.currentInvestedAmount(store);
+        Integer productCount = 0;
+        Integer totalQuantity = 0;
+        Double totalInvested = 0.0d;
+        for(InventoryWorthInsight iwi: worthInsights){
+            productCount++;
+            totalQuantity += iwi.getQuantity();
+            totalInvested += iwi.getProductWorth();
+        }
+        return InventoryWorthDto.builder()
+                .date(LocalDateTime.now())
+                .totalInvested(totalInvested)
+                .totalQuantity(totalQuantity)
+                .totalProducts(productCount)
+                .analysis(worthInsights)
+                .build();
+    }
 
     public static String getMonth(int month){
         return switch (month){

@@ -41,7 +41,7 @@ public class Product extends BaseEntity {
     @PositiveOrZero(message = "Cost Price cannot be negative")
     private Float costPrice;
 
-    private boolean isTaxed;
+    private boolean taxed;
 
     @PositiveOrZero(message = "cgst cannot be negative")
     private Float cgst;

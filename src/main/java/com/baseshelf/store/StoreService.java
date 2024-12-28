@@ -1,9 +1,10 @@
 package com.baseshelf.store;
 
+import com.baseshelf.category.CategoryService;
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
@@ -16,10 +17,30 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/*
+Overview
+The StoreService class is a Spring Service that handles operations related to managing Store entities.
+It interacts with the StoreRepository for database operations and the CategoryService for managing categories associated
+with stores. The class includes methods for creating, retrieving, updating, and deleting stores, as well as handling
+store-specific logic such as enabling/disabling and managing unique constraints.
+*/
+
 @Service
-@RequiredArgsConstructor
 public class StoreService {
+
+//    Handles persistence and query operations for Store entities.
     private final StoreRepository storeRepository;
+//    Used to assign global categories to newly registered stores.
+    private final CategoryService categoryService;
+
+    /*
+    * Injects dependencies into the class.
+    * The @Lazy annotation is used for CategoryService to prevent circular dependency issues if they exist.
+    */
+    public StoreService(StoreRepository storeRepository, @Lazy CategoryService categoryService) {
+        this.storeRepository = storeRepository;
+        this.categoryService = categoryService;
+    }
 
     public Store getById(Long id){
         Optional<Store> storeOpt = storeRepository.findById(id);
@@ -40,10 +61,13 @@ public class StoreService {
         if(storeOpt.isPresent()){
             handleEmailAlreadyExistException(store);
         }
-        return storeRepository.save(store);
+        Store savedStore = storeRepository.save(store);
+        categoryService.saveGlobalCategoriesForStore(savedStore);
+        return savedStore;
     }
 
 
+    //Inserting test data for development environment. You can remove it if you want.
     @Bean
     @Order(value = 1)
     public CommandLineRunner insertStores(
