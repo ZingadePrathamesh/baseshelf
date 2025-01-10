@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -101,6 +102,64 @@ public class ProductOrderService {
                     .amount(amount)
                     .gst(gst)
                     .productOrder(productOrder)
+                    .orderType(OrderType.SALE)
+                    .build());
+        }
+
+        productOrder.setTotalAmount(totalAmount);
+        productOrder.setTotalGst(totalGst);
+        productOrder.setItemCount(itemCount);
+        productOrder.setOrderItems(new ArrayList<>(orderItems));
+
+        productOrder = productOrderRepository.save(productOrder);
+
+        return this.getById(storeId, productOrder.getId());
+    }
+
+    public ProductOrderResponseDto returnProductByOrderRequests(Long storeId, List<OrderRequest> orderRequests){
+        Map<Long, Integer> productMap = orderRequests.stream().collect(Collectors.toMap(OrderRequest::getProductId, OrderRequest::getQuantity));
+        return returnProduct(storeId, productMap);
+    }
+
+    public ProductOrderResponseDto returnProductByList(Long storeId, List<Long> productIds){
+        Map<Long, Integer> productMap = new HashMap<>();
+        productIds.forEach((id)-> productMap.merge(id, 1, Integer::sum));
+        return returnProduct(storeId, productMap);
+    }
+
+    public ProductOrderResponseDto returnProduct(Long storeId, Map<Long, Integer> productMap){
+        Store store = storeService.getById(storeId);
+        float totalAmount= 0.0f;
+        float totalGst = 0.0f;
+        int itemCount = 0;
+
+        Set<Product> products = productService.returnedProducts(store, productMap);
+        ProductOrder productOrder = ProductOrder.builder()
+                .name(LocalDateTime.now().toString())
+                .store(store)
+                .orderTime(LocalTime.now())
+                .totalAmount(totalAmount)
+                .totalGst(totalGst)
+                .build();
+
+        Set<OrderItem> orderItems = new HashSet<>();
+        for(Product product: products){
+            int quantity = productMap.get(product.getId());
+            float gst = product.isTaxed() ? -1 * (product.getSellingPrice() * quantity * (product.getCgst()+product.getSgst()) / 100) : 0;
+            float amount = (-1 * product.getSellingPrice() * quantity) + gst;
+
+            totalAmount += amount;
+            totalGst += gst;
+            itemCount += quantity;
+
+            orderItems.add(OrderItem.builder()
+                    .name(product.getName() + " " + quantity)
+                    .quantity(quantity)
+                    .product(product)
+                    .amount(amount)
+                    .gst(gst)
+                    .productOrder(productOrder)
+                    .orderType(OrderType.RETURN)
                     .build());
         }
 
@@ -121,10 +180,10 @@ public class ProductOrderService {
                 .orElseThrow(()-> new OrderNotFoundException("Order with id: " + orderId +  "do not exist!")));
     }
 
-    public List<ProductOrderResponse> getAllByStore(Long storeId) {
-        Store store = storeService.getById(storeId);
-        return productOrderRepository.findAllByStore(store);
-    }
+//    public List<ProductOrderResponse> getAllByStore(Long storeId) {
+//        Store store = storeService.getById(storeId);
+//        return productOrderRepository.findAllByStore(store);
+//    }
 
     public List<ProductOrderResponseDto> getAllByStoreAndFilter(Long storeId, ProductOrderFilter filter) {
         Specification<ProductOrder> specification = dynamicFilter(storeId, filter);
@@ -132,6 +191,11 @@ public class ProductOrderService {
         return productOrders.stream()
                 .map(this::productOrderResponseMapper)
                 .toList();
+    }
+
+    public List<ProductOrder> findAllByStoreAndFilter(Long storeId, ProductOrderFilter filter) {
+        Specification<ProductOrder> specification = dynamicFilter(storeId, filter);
+        return productOrderRepository.findAll(specification);
     }
 
     public void deleteByStoreAndId(Long storeId, Long orderId){

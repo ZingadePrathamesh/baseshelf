@@ -36,9 +36,16 @@ public class OrderItem extends BaseEntity {
     @Positive(message = "Quantity should be greater than zero")
     private Integer quantity;
 
-    @PositiveOrZero(message = "Amount must be equal to or greater than zero")
+//    @PositiveOrZero(message = "Amount must be equal to or greater than zero")
     private Float amount;
 
-    @PositiveOrZero(message = "GST must be equal to or greater than zero")
+//    @PositiveOrZero(message = "GST must be equal to or greater than zero")
     private Float gst;
+
+    @Enumerated(value = EnumType.STRING)
+    private OrderType orderType;
+}
+
+enum OrderType{
+    SALE, RETURN
 }

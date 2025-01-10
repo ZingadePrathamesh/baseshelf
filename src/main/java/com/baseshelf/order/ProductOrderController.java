@@ -11,12 +11,12 @@ import java.util.List;
 public class ProductOrderController {
     private final ProductOrderService productOrderService;
 
-    @GetMapping("")
-    public List<ProductOrderResponse> getAllOrdersByStore(
-            @PathVariable(name = "store-id") Long storeId
-    ){
-        return productOrderService.getAllByStore(storeId);
-    }
+//    @GetMapping("")
+//    public List<ProductOrderResponse> getAllOrdersByStore(
+//            @PathVariable(name = "store-id") Long storeId
+//    ){
+//        return productOrderService.getAllByStore(storeId);
+//    }
 
     @GetMapping("/filters")
     public List<ProductOrderResponseDto> getAllOrdersByStoreAndFilter(
@@ -35,12 +35,28 @@ public class ProductOrderController {
         return productOrderService.createOrderByIds(storeId, productIds);
     }
 
+    @PostMapping("returned/lists")
+    public ProductOrderResponseDto createReturnOrderByList(
+            @PathVariable(name = "store-id") Long storeId,
+            @RequestBody List<Long> productIds
+            ){
+        return productOrderService.returnProductByList(storeId, productIds);
+    }
+
     @PostMapping("/body")
     public ProductOrderResponseDto createOrderByRequest(
             @PathVariable(name = "store-id") Long storeId,
             @RequestBody List<OrderRequest> orderRequests
             ){
         return productOrderService.createOrderByRequest(storeId, orderRequests);
+    }
+
+    @PostMapping("returned/body")
+    public ProductOrderResponseDto createReturnOrderByRequest(
+            @PathVariable(name = "store-id") Long storeId,
+            @RequestBody List<OrderRequest> orderRequests
+            ){
+        return productOrderService.returnProductByOrderRequests(storeId, orderRequests);
     }
 
     @DeleteMapping("/{order-id}")

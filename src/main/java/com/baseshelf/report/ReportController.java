@@ -48,4 +48,24 @@ public class ReportController {
             throw new ExcelGenerationException(e.getMessage());
         }
     }
+
+    @GetMapping("/orders/date-range")
+    public void getOrderReportForDateRange(
+            HttpServletResponse response,
+            @PathVariable("store-id") Long storeId,
+            @RequestParam(value = "from")LocalDate from,
+            @RequestParam(value = "to")LocalDate to,
+            @RequestParam(value = "limit") Integer limit
+    ){
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        String s1 = "attachment; " + "filename=" + from.toString() + "_" + "to" + "_" + to.toString() +".xlsx";
+        response.setHeader(HttpHeaders.CONTENT_DISPOSITION, s1);
+
+        try(ByteArrayOutputStream outputStream = new ByteArrayOutputStream()){
+            reportService.orderReportGeneration(outputStream, storeId, from, to, limit);
+            response.getOutputStream().write(outputStream.toByteArray());
+        }catch (Exception e){
+            throw new ExcelGenerationException(e.getMessage());
+        }
+    }
 }

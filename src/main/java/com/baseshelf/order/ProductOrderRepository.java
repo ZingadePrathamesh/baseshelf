@@ -17,7 +17,7 @@ import java.util.Optional;
 
 @Repository
 public interface ProductOrderRepository extends JpaRepository<ProductOrder, Long>, JpaSpecificationExecutor<ProductOrder>{
-    List<ProductOrderResponse> findAllByStore(Store store);
+//    List<ProductOrderResponse> findAllByStore(Store store);
     Optional<ProductOrder> findByStoreAndId(Store store, Long orderId);
 
     @Transactional
@@ -56,4 +56,23 @@ public interface ProductOrderRepository extends JpaRepository<ProductOrder, Long
             ORDER BY investedAmount DESC
             """)
     List<InventoryWorthInsight> currentInvestedAmount(Store store);
+
+
+    @Query(value = """
+            SELECT new com.baseshelf.order.ProductOrderDto( 
+            po.id AS id, 
+            po.name AS name, 
+            po.createdOn AS date, 
+            po.orderTime AS time,
+            po.itemCount AS count, 
+            po.totalAmount AS total_amount, 
+            po.totalGst AS gst 
+            )
+            FROM ProductOrder po 
+            WHERE po.store = :store 
+            AND po.createdOn BETWEEN :from AND :to 
+            ORDER BY po.createdOn DESC 
+            LIMIT :limit
+            """)
+    List<ProductOrderDto> findAllProductOrderByDateRange(Store store, LocalDate from, LocalDate to, Integer limit);
 }

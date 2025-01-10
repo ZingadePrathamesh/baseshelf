@@ -1,6 +1,6 @@
 package com.baseshelf.report;
 
-import com.baseshelf.order.OrderItemRepository;
+import com.baseshelf.order.*;
 import com.baseshelf.report.dto.OrderItemReport;
 import com.baseshelf.store.Store;
 import com.baseshelf.store.StoreService;
@@ -21,6 +21,7 @@ import java.util.List;
 public class ReportService {
 
     private final OrderItemRepository orderItemRepository;
+    private final ProductOrderRepository productOrderRepository;
     private final StoreService storeService;
 
     public <T> void generateExcelSheet(List<T> data, Class<T> dataClass, ByteArrayOutputStream out, String sheetName){
@@ -89,5 +90,11 @@ public class ReportService {
         Store store = storeService.getById(storeId);
         List<OrderItemReport> reports = orderItemRepository.getSalesReportByDateRange(store, from, to, limit);
         generateExcelSheet(reports, OrderItemReport.class, outputStream, "Sales Report");
+    }
+
+    public void orderReportGeneration(ByteArrayOutputStream outputStream, Long storeId, LocalDate from, LocalDate to, Integer limit){
+        Store store = storeService.getById(storeId);
+        List<ProductOrderDto> orders = productOrderRepository.findAllProductOrderByDateRange(store, from, to, limit);
+        generateExcelSheet(orders, ProductOrderDto.class, outputStream, "Order Report");
     }
 }

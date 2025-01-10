@@ -7,12 +7,11 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.Size;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -35,10 +34,10 @@ public class ProductOrder extends BaseEntity {
     @PositiveOrZero(message = "Item count cannot be a negative number!")
     private int itemCount;
 
-    @PositiveOrZero(message = "Product Total Amount must be equal to or greater than zero")
+//    @PositiveOrZero(message = "Product Total Amount must be equal to or greater than zero")
     private Float totalAmount;
 
-    @PositiveOrZero(message = "Total GST must be equal to or greater than zero")
+//    @PositiveOrZero(message = "Total GST must be equal to or greater than zero")
     private Float totalGst;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -46,3 +45,4 @@ public class ProductOrder extends BaseEntity {
     @JsonBackReference
     private Store store;
 }
+

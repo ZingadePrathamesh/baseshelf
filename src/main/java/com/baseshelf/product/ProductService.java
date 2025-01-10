@@ -5,6 +5,7 @@ import com.baseshelf.brand.Brand;
 import com.baseshelf.brand.BrandService;
 import com.baseshelf.category.Category;
 import com.baseshelf.category.CategoryService;
+import com.baseshelf.order.OrderRequest;
 import com.baseshelf.store.Store;
 import com.baseshelf.store.StoreNotFoundException;
 import com.baseshelf.store.StoreService;
@@ -37,6 +38,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
@@ -346,4 +348,21 @@ public class ProductService {
         };
     }
 
+    @Transactional
+    public Set<Product> returnedProducts(Store store, Map<Long, Integer> productMap) {
+        Set<Long> productIds = productMap.keySet();
+        List<Product> fetchedProducts = productRepository.findAllByStoreAndIdIn(store, productIds);
+        Map<Long, Product> productsMap = fetchedProducts.stream().collect(Collectors.toMap(Product::getId, product->product));
+        Set<Product> updatedProducts = new HashSet<>();
+
+        for(Long id: productIds){
+           Product product = productsMap.get(id);
+           if(product == null){
+               throw new ProductNotFoundException("Product with id: " + id + " not found!");
+           }
+           product.setQuantity(product.getQuantity() + productMap.get(id));
+           updatedProducts.add(product);
+        }
+        return updatedProducts;
+    }
 }
