@@ -394,4 +394,27 @@ public class ProductService {
         }
         return productMap;
     }
+
+    @Transactional
+    public Map<Long, Product> returnProducts(Store store, List<ProductQuantityMap> productQuantity) {
+        Set<Long> productIds = productQuantity
+                .stream()
+                .map(ProductQuantityMap::getProductId)
+                .collect(Collectors.toSet());
+
+        List<Product> products = productRepository.findAllByStoreAndIdIn(store, productIds);
+
+        Map<Long, Product> productMap = products
+                .stream()
+                .collect(Collectors.toMap(Product::getId, Function.identity()));
+
+        for(ProductQuantityMap pm: productQuantity){
+            Product product = productMap.get(pm.getProductId());
+            if(product == null){
+                throw new ProductNotFoundException("product with id: " + pm.getProductId() + " does not exist");
+            }
+            product.setQuantity(product.getQuantity() + pm.getQuantity());
+        }
+        return productMap;
+    }
 }

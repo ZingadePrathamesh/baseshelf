@@ -1,5 +1,6 @@
 package com.baseshelf.order;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -62,7 +63,8 @@ public class ProductOrderController {
     @PostMapping("/create")
     public ProductOrderResponseDto createOrder(
             @PathVariable(name = "store-id") Long storeId,
-            @RequestBody ProductOrderRequest productOrderRequest
+            @RequestBody @Valid ProductOrderRequest productOrderRequest
+
     ){
         return productOrderService.createOrder(storeId, productOrderRequest);
     }

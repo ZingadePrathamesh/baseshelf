@@ -17,7 +17,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -46,133 +49,8 @@ public class ProductOrderService {
                 productIds3.add((long) faker.number().numberBetween(326, 399));
                 productIds4.add((long) faker.number().numberBetween(201, 399));
             }
-//            createOrderByIds(2L, productIds);
-//            createOrderByIds(2L, productIds);
-//            createOrderByIds(2L, productIds2);
-//            createOrderByIds(2L, productIds3);
-//            createOrderByIds(2L, productIds3);
-//            createOrderByIds(2L, productIds4);
-//            createOrderByIds(2L, productIds4);
         };
     }
-
-//    public ProductOrderResponseDto createOrderByIds(Long storeId, List<Long> productIds){
-//        Map<Long, Integer> productMap = new HashMap<>();
-//        productIds.forEach((id)-> productMap.merge(id, 1, Integer::sum));
-//        return createOrderByProductMap(storeId, productMap);
-//    }
-//
-//    public ProductOrderResponseDto createOrderByRequest(Long storeId, List<ProductQuantityMap> productQuantityMaps){
-//        Map<Long, Integer> productMap = new HashMap<>();
-//        for(ProductQuantityMap or: productQuantityMaps){
-//            productMap.merge(or.getProductId(), or.getQuantity(), Integer::sum);
-//        }
-//        return createOrderByProductMap(storeId, productMap);
-//    }
-//
-//    public ProductOrderResponseDto createOrderByProductMap(Long storeId, Map<Long, Integer> productMap){
-//        Store store = storeService.getById(storeId);
-//        float totalAmount= 0.0f;
-//        float totalGst = 0.0f;
-//        int itemCount = 0;
-//
-//        Set<Product> products = productService.validateProductsAndQuantity(storeId, productMap);
-//
-//        ProductOrder productOrder = ProductOrder.builder()
-//                .name(LocalDateTime.now().toString())
-//                .store(store)
-//                .orderTime(LocalTime.now())
-//                .totalAmount(totalAmount)
-//                .totalGst(totalGst)
-//                .build();
-//
-//        Set<OrderItem> orderItems = new HashSet<>();
-//        for(Product product: products){
-//            int quantity = productMap.get(product.getId());
-//            float gst = product.isTaxed() ? (product.getSellingPrice() * quantity * (product.getCgst()+product.getSgst()) / 100) : 0;
-//            float amount = product.getSellingPrice() * quantity + gst;
-//
-//            totalAmount += amount;
-//            totalGst += gst;
-//            itemCount += quantity;
-//
-//            orderItems.add(OrderItem.builder()
-//                    .name(product.getName() + " " + quantity)
-//                    .quantity(quantity)
-//                    .product(product)
-//                    .amount(amount)
-//                    .gst(gst)
-//                    .productOrder(productOrder)
-//                    .orderType(OrderType.SALE)
-//                    .build());
-//        }
-//
-//        productOrder.setTotalAmount(totalAmount);
-//        productOrder.setTotalGst(totalGst);
-//        productOrder.setItemCount(itemCount);
-//        productOrder.setOrderItems(new ArrayList<>(orderItems));
-//
-//        productOrder = productOrderRepository.save(productOrder);
-//
-//        return this.getById(storeId, productOrder.getId());
-//    }
-//
-//    public ProductOrderResponseDto returnProductByOrderRequests(Long storeId, List<ProductQuantityMap> productQuantityMaps){
-//        Map<Long, Integer> productMap = productQuantityMaps.stream().collect(Collectors.toMap(ProductQuantityMap::getProductId, ProductQuantityMap::getQuantity));
-//        return returnProduct(storeId, productMap);
-//    }
-//
-//    public ProductOrderResponseDto returnProductByList(Long storeId, List<Long> productIds){
-//        Map<Long, Integer> productMap = new HashMap<>();
-//        productIds.forEach((id)-> productMap.merge(id, 1, Integer::sum));
-//        return returnProduct(storeId, productMap);
-//    }
-
-//    public ProductOrderResponseDto returnProduct(Long storeId, Map<Long, Integer> productMap){
-//        Store store = storeService.getById(storeId);
-//        float totalAmount= 0.0f;
-//        float totalGst = 0.0f;
-//        int itemCount = 0;
-//
-//        Set<Product> products = productService.returnedProducts(store, productMap);
-//        ProductOrder productOrder = ProductOrder.builder()
-//                .name(LocalDateTime.now().toString())
-//                .store(store)
-//                .orderTime(LocalTime.now())
-//                .totalAmount(totalAmount)
-//                .totalGst(totalGst)
-//                .build();
-//
-//        Set<OrderItem> orderItems = new HashSet<>();
-//        for(Product product: products){
-//            int quantity = productMap.get(product.getId());
-//            float gst = product.isTaxed() ? -1 * (product.getSellingPrice() * quantity * (product.getCgst()+product.getSgst()) / 100) : 0;
-//            float amount = (-1 * product.getSellingPrice() * quantity) + gst;
-//
-//            totalAmount += amount;
-//            totalGst += gst;
-//            itemCount += quantity;
-//
-//            orderItems.add(OrderItem.builder()
-//                    .name(product.getName() + " " + quantity)
-//                    .quantity(quantity)
-//                    .product(product)
-//                    .amount(amount)
-//                    .gst(gst)
-//                    .productOrder(productOrder)
-//                    .orderType(OrderType.RETURN)
-//                    .build());
-//        }
-//
-//        productOrder.setTotalAmount(totalAmount);
-//        productOrder.setTotalGst(totalGst);
-//        productOrder.setItemCount(itemCount);
-//        productOrder.setOrderItems(new ArrayList<>(orderItems));
-//
-//        productOrder = productOrderRepository.save(productOrder);
-//
-//        return this.getById(storeId, productOrder.getId());
-//    }
 
     public ProductOrderResponseDto getById(Long storeId, Long orderId){
         Store store = storeService.getById(storeId);
@@ -198,43 +76,6 @@ public class ProductOrderService {
         Store store = storeService.getById(storeId);
         productOrderRepository.deleteByStoreAndId(store, orderId);
     }
-
-//    private ProductOrderResponseDto productOrderResponseMapper(ProductOrder productOrder) {
-//        return ProductOrderResponseDto.builder()
-//                .id(productOrder.getId())
-//                .orderTime(productOrder.getOrderTime())
-//                .createdOn(productOrder.getCreatedOn())
-//                .totalGst(productOrder.getTotalGst())
-//                .totalAmount(productOrder.getTotalAmount())
-//                .itemCount(productOrder.getItemCount())
-//                .orderItems(
-//                        productOrder.getOrderItems().stream().map(this::orderItemResponseMapper).toList()
-//                )
-//                .store(StoreResponse.builder()
-//                        .gstinNumber(productOrder.getStore().getGstinNumber())
-//                        .description(productOrder.getStore().getDescription())
-//                        .name(productOrder.getStore().getName())
-//                        .build()
-//                )
-//                .build();
-//    }
-
-//    public OrderItemResponse orderItemResponseMapper(OrderItem orderItem){
-//        return OrderItemResponse.builder()
-//                .id(orderItem.getId())
-//                .gst(orderItem.getGst())
-//                .amount(orderItem.getAmount())
-//                .quantity(orderItem.getQuantity())
-//                .orderType(orderItem.getOrderType())
-//                .product(ProductResponse.builder()
-//                        .id(orderItem.getProduct().getId())
-//                        .name(orderItem.getProduct().getName())
-//                        .cgst(orderItem.getProduct().getCgst())
-//                        .sgst(orderItem.getProduct().getSgst())
-//                        .sellingPrice(orderItem.getProduct().getSellingPrice())
-//                        .build())
-//                .build();
-//    }
 
     Specification<ProductOrder> dynamicFilter(Long storeId, ProductOrderFilter filter){
         return (root, query, criteriaBuilder) -> {
@@ -273,9 +114,15 @@ public class ProductOrderService {
         Float totalAmountIncGst =  0F;
         Float totalGst =  0F;
         Integer itemCount = 0;
+        OrderType orderType = OrderType.valueOf(productOrderRequest.getOrderType());
 
         Customer customer = productOrderRequest.getCustomer();
-        Map<Long, Product> products = productService.validateProductsAndQuantity(store, productOrderRequest.getProductMap());
+        Map<Long, Product> products = null;
+
+        if(orderType.equals(OrderType.SALE))
+             products = productService.validateProductsAndQuantity(store, productOrderRequest.getProductMap());
+        else
+            products = productService.returnProducts(store, productOrderRequest.getProductMap());
 
         ProductOrder productOrder = ProductOrder.builder()
                 .name(LocalDateTime.now().toString())
@@ -298,16 +145,17 @@ public class ProductOrderService {
             Float sgst = product.getSgst();
             Float gst = cgst+sgst;
 
-            Float amountExcGst = product.getSellingPrice() * quantity;
-            Float amountIncGst = product.isTaxed() ? amountExcGst + amountExcGst * gst / 100 : amountExcGst ;
+            Float amountExcGst = product.getSellingPrice() * quantity * (orderType.equals(OrderType.SALE)? 1 : -1);
+            Float gstAmount = amountExcGst * gst / 100;
+            Float amountIncGst = product.isTaxed() ? (amountExcGst + gstAmount) : amountExcGst ;
 
             totalAmountExcGst += amountExcGst;
             totalAmountIncGst += amountIncGst;
-            totalGst += product.isTaxed() ? amountExcGst * gst/100 : 0;
+            totalGst += product.isTaxed() ? gstAmount : 0;
             itemCount += quantity;
 
             OrderItem orderItem = OrderItem.builder()
-                    .orderType(OrderType.SALE)
+                    .orderType(orderType)
                     .name(String.format("%s : %d", product.getName(), quantity))
                     .quantity(quantity)
                     .amountExcludingGst(amountExcGst)
