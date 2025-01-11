@@ -5,7 +5,6 @@ import com.baseshelf.utils.BaseEntity;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -29,7 +28,7 @@ public class OrderItem extends BaseEntity {
     @JsonBackReference
     private ProductOrder productOrder;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "product_id")
     private Product product;
 
@@ -37,7 +36,13 @@ public class OrderItem extends BaseEntity {
     private Integer quantity;
 
 //    @PositiveOrZero(message = "Amount must be equal to or greater than zero")
-    private Float amount;
+    private Float amountIncludingGst;
+
+    private Float amountExcludingGst;
+
+    private Float cgst;
+
+    private Float sgst;
 
 //    @PositiveOrZero(message = "GST must be equal to or greater than zero")
     private Float gst;

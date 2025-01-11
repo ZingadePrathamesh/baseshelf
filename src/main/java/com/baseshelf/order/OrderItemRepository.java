@@ -13,7 +13,7 @@ import java.util.List;
 @Repository
 public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
 
-    @Query("SELECT MONTH(oi.createdOn) AS month, p.brand.id AS id, p.brand.name AS name, count(p.id) AS products, count(oi.productOrder) AS orderCount, sum(oi.quantity) AS quantity, sum(oi.amount) AS amount FROM OrderItem oi " +
+    @Query("SELECT MONTH(oi.createdOn) AS month, p.brand.id AS id, p.brand.name AS name, count(p.id) AS products, count(oi.productOrder) AS orderCount, sum(oi.quantity) AS quantity, sum(oi.amountIncludingGst) AS amount FROM OrderItem oi " +
             "INNER JOIN Product p " +
             "ON oi.product = p " +
             "WHERE p.brand IN :brands " +
@@ -24,7 +24,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
             "ORDER BY MONTH(oi.createdOn) DESC ")
     List<Object[]> insightsOfBrandsByMonth(Store store, List<Brand> brands, Integer year, Integer lowerMonth, Integer upperMonth);
 
-    @Query("SELECT oi.createdOn AS date, p.brand.id AS id, p.brand.name AS name, COUNT(DISTINCT p.id) AS products, COUNT(DISTINCT oi.productOrder) AS orders, SUM(oi.quantity) AS quantity, SUM(oi.amount) AS revenue FROM OrderItem oi " +
+    @Query("SELECT oi.createdOn AS date, p.brand.id AS id, p.brand.name AS name, COUNT(DISTINCT p.id) AS products, COUNT(DISTINCT oi.productOrder) AS orders, SUM(oi.quantity) AS quantity, SUM(oi.amountIncludingGst) AS revenue FROM OrderItem oi " +
             "INNER JOIN Product p " +
             "ON oi.product = p " +
             "WHERE p.store = :store " +
@@ -44,10 +44,10 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
                 p.selling_price AS price,
                 SUM(oi.quantity) AS total_quantity, 
                 COUNT(DISTINCT oi.order_id) AS orders, 
-                SUM(oi.amount) AS revenue, 
+                SUM(oi.amountIncludingGst) AS revenue, 
                 b.id AS brand, 
                 b.name AS brandName, 
-                ROW_NUMBER() OVER (PARTITION BY date_part('month', oi.created_on) ORDER BY SUM(oi.quantity) DESC, SUM(oi.amount) DESC) AS rank
+                ROW_NUMBER() OVER (PARTITION BY date_part('month', oi.created_on) ORDER BY SUM(oi.quantity) DESC, SUM(oi.amountIncludingGst) DESC) AS rank
             FROM order_item oi
             INNER JOIN product p ON oi.product_id = p.id 
             INNER JOIN brand b ON p.brand_id = b.id 
@@ -72,10 +72,10 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
                 p.selling_price AS price,
                 SUM(oi.quantity) AS total_quantity, 
                 COUNT(DISTINCT oi.order_id) AS orders, 
-                SUM(oi.amount) AS revenue, 
+                SUM(oi.amountIncludingGst) AS revenue, 
                 b.id AS brand, 
                 b.name AS brandName, 
-                ROW_NUMBER() OVER (PARTITION BY date_part('month', oi.created_on) ORDER BY SUM(oi.quantity) DESC, SUM(oi.amount) DESC) AS rank
+                ROW_NUMBER() OVER (PARTITION BY date_part('month', oi.created_on) ORDER BY SUM(oi.quantity) DESC, SUM(oi.amountIncludingGst) DESC) AS rank
             FROM order_item oi
             INNER JOIN product p ON oi.product_id = p.id 
             INNER JOIN brand b ON p.brand_id = b.id 
@@ -99,10 +99,10 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
                 p.selling_price AS price,
                 SUM(oi.quantity) AS total_quantity, 
                 COUNT(DISTINCT oi.order_id) AS orders, 
-                SUM(oi.amount) AS revenue, 
+                SUM(oi.amountIncludingGst) AS revenue, 
                 b.id AS brand, 
                 b.name AS brandName, 
-                ROW_NUMBER() OVER (PARTITION BY oi.created_on ORDER BY SUM(oi.quantity) DESC, SUM(oi.amount) DESC) AS rank
+                ROW_NUMBER() OVER (PARTITION BY oi.created_on ORDER BY SUM(oi.quantity) DESC, SUM(oi.amountIncludingGst) DESC) AS rank
             FROM order_item oi
             INNER JOIN product p ON oi.product_id = p.id 
             INNER JOIN brand b ON p.brand_id = b.id 
@@ -126,10 +126,10 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
                 p.selling_price AS price,
                 SUM(oi.quantity) AS total_quantity, 
                 COUNT(DISTINCT oi.order_id) AS orders, 
-                SUM(oi.amount) AS revenue, 
+                SUM(oi.amountIncludingGst) AS revenue, 
                 b.id AS brand, 
                 b.name AS brandName, 
-                ROW_NUMBER() OVER (PARTITION BY oi.created_on ORDER BY SUM(oi.quantity) DESC, SUM(oi.amount) DESC) AS rank
+                ROW_NUMBER() OVER (PARTITION BY oi.created_on ORDER BY SUM(oi.quantity) DESC, SUM(oi.amountIncludingGst) DESC) AS rank
             FROM order_item oi
             INNER JOIN product p ON oi.product_id = p.id 
             INNER JOIN brand b ON p.brand_id = b.id 
@@ -151,8 +151,8 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
             count(distinct p.id) AS productCount, 
             count(distinct po.id) AS orderCount, 
             sum(oi.quantity) AS quantity, 
-            sum(oi.amount) AS revenue, 
-            ROW_NUMBER() OVER (PARTITION BY date_part('month', oi.created_on) ORDER BY SUM(oi.quantity) DESC, SUM(oi.amount) DESC) AS rank 
+            sum(oi.amountIncludingGst) AS revenue, 
+            ROW_NUMBER() OVER (PARTITION BY date_part('month', oi.created_on) ORDER BY SUM(oi.quantity) DESC, SUM(oi.amountIncludingGst) DESC) AS rank 
             FROM order_item oi 
             INNER JOIN product p ON p.id = oi.product_id 
             INNER JOIN product_categories pc on pc.product_id = p.id 
@@ -178,8 +178,8 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
             count(distinct p.id) AS productCount, 
             count(distinct po.id) AS orderCount, 
             sum(oi.quantity) AS quantity, 
-            sum(oi.amount) AS revenue, 
-            ROW_NUMBER() OVER (PARTITION BY date_part('month', oi.created_on) ORDER BY SUM(oi.quantity) DESC, SUM(oi.amount) DESC) AS rank
+            sum(oi.amountIncludingGst) AS revenue, 
+            ROW_NUMBER() OVER (PARTITION BY date_part('month', oi.created_on) ORDER BY SUM(oi.quantity) DESC, SUM(oi.amountIncludingGst) DESC) AS rank
             FROM order_item oi 
             INNER JOIN product p ON p.id = oi.product_id 
             INNER JOIN product_categories pc on pc.product_id = p.id 
@@ -206,8 +206,8 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
             count(distinct p.id) AS productCount, 
             count(distinct po.id) AS orderCount, 
             sum(oi.quantity) AS quantity, 
-            sum(oi.amount) AS revenue, 
-            ROW_NUMBER() OVER (PARTITION BY oi.created_on ORDER BY SUM(oi.quantity) DESC, SUM(oi.amount) DESC) AS rank
+            sum(oi.amountIncludingGst) AS revenue, 
+            ROW_NUMBER() OVER (PARTITION BY oi.created_on ORDER BY SUM(oi.quantity) DESC, SUM(oi.amountIncludingGst) DESC) AS rank
             FROM order_item oi 
             INNER JOIN product p ON p.id = oi.product_id 
             INNER JOIN product_categories pc on pc.product_id = p.id 
@@ -232,8 +232,8 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
             count(distinct p.id) AS productCount, 
             count(distinct po.id) AS orderCount, 
             sum(oi.quantity) AS quantity, 
-            sum(oi.amount) AS revenue, 
-            ROW_NUMBER() OVER (PARTITION BY oi.created_on ORDER BY SUM(oi.quantity) DESC, SUM(oi.amount) DESC) AS rank
+            sum(oi.amountIncludingGst) AS revenue, 
+            ROW_NUMBER() OVER (PARTITION BY oi.created_on ORDER BY SUM(oi.quantity) DESC, SUM(oi.amountIncludingGst) DESC) AS rank
             FROM order_item oi 
             INNER JOIN product p ON p.id = oi.product_id 
             INNER JOIN product_categories pc on pc.product_id = p.id 
@@ -259,7 +259,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
                 p.name, 
                 p.sellingPrice, 
                 oi.quantity, 
-                oi.amount, 
+                oi.amountIncludingGst, 
                 b.id, 
                 b.name 
             )  

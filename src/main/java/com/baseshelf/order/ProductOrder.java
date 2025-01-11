@@ -37,10 +37,14 @@ public class ProductOrder extends BaseEntity {
     private int itemCount;
 
 //    @PositiveOrZero(message = "Product Total Amount must be equal to or greater than zero")
-    private Float totalAmount;
+    private Float totalAmountExcludingGst;
+
+    private Float totalAmountIncludingGst;
 
 //    @PositiveOrZero(message = "Total GST must be equal to or greater than zero")
     private Float totalGst;
+
+    private String amountInWords;
 
     @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "customer_id")

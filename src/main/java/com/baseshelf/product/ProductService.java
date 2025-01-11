@@ -5,7 +5,7 @@ import com.baseshelf.brand.Brand;
 import com.baseshelf.brand.BrandService;
 import com.baseshelf.category.Category;
 import com.baseshelf.category.CategoryService;
-import com.baseshelf.order.OrderRequest;
+import com.baseshelf.order.ProductQuantityMap;
 import com.baseshelf.store.Store;
 import com.baseshelf.store.StoreNotFoundException;
 import com.baseshelf.store.StoreService;
@@ -38,7 +38,6 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
@@ -364,5 +363,35 @@ public class ProductService {
            updatedProducts.add(product);
         }
         return updatedProducts;
+    }
+
+    @Transactional
+    public Map<Long, Product> validateProductsAndQuantity(Store store, List<ProductQuantityMap> productQuantity) {
+        Set<Long> productIds = productQuantity
+                .stream()
+                .map(ProductQuantityMap::getProductId)
+                .collect(Collectors.toSet());
+
+        List<Product> products = productRepository.findAllByStoreAndIdIn(store, productIds);
+
+        Map<Long, Product> productMap = products
+                .stream()
+                .collect(Collectors.toMap(Product::getId, Function.identity()));
+
+        for(ProductQuantityMap pm : productQuantity){
+            Product product = productMap.get(pm.getProductId());
+            if(product == null){
+                throw new ProductNotFoundException("product with id: " + pm.getProductId() + " does not exist");
+            }
+
+            int newValue = product.getQuantity() - pm.getQuantity();
+            if(newValue < 0){
+                throw new ProductQuantityExceedException("Product with id: " + pm.getProductId() + " exceeds in quantity by "+ Math.abs(newValue));
+            }
+            else{
+                product.setQuantity(newValue);
+            }
+        }
+        return productMap;
     }
 }

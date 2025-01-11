@@ -10,7 +10,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.io.InvalidClassException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -24,13 +23,13 @@ public interface ProductOrderRepository extends JpaRepository<ProductOrder, Long
     @Modifying
     void deleteByStoreAndId(Store store, Long orderId);
 
-    @Query("SELECT po.createdOn, SUM(po.totalAmount), SUM(po.itemCount) FROM ProductOrder po " +
+    @Query("SELECT po.createdOn, SUM(po.totalAmountIncludingGst), SUM(po.itemCount) FROM ProductOrder po " +
             "WHERE po.store = :store " +
             "AND po.createdOn BETWEEN :from AND :to " +
             "GROUP BY po.createdOn")
     List<Object[]> findOrdersAnalysisByDateRange(@Param("store") Store store, @Param("from") LocalDate from, @Param("to") LocalDate to);
 
-    @Query("SELECT MONTH(po.createdOn) AS month, SUM(po.itemCount), SUM(po.totalAmount) AS totalRevenue " +
+    @Query("SELECT MONTH(po.createdOn) AS month, SUM(po.itemCount), SUM(po.totalAmountIncludingGst) AS totalRevenue " +
             "FROM ProductOrder po " +
             "WHERE po.store = :store " +
             "AND YEAR(po.createdOn) = :year " +
@@ -65,7 +64,7 @@ public interface ProductOrderRepository extends JpaRepository<ProductOrder, Long
             po.createdOn AS date, 
             po.orderTime AS time,
             po.itemCount AS count, 
-            po.totalAmount AS total_amount, 
+            po.totalAmountIncludingGst AS total_amount, 
             po.totalGst AS gst 
             )
             FROM ProductOrder po 

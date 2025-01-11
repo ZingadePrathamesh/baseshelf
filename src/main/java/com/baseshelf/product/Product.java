@@ -43,6 +43,9 @@ public class Product extends BaseEntity {
 
     private boolean taxed;
 
+    @Size(max = 50, message = "hsnCode must not exceed 500 characters")
+    private String hsnCode;
+
     @PositiveOrZero(message = "cgst cannot be negative")
     private Float cgst;
 
@@ -52,6 +55,9 @@ public class Product extends BaseEntity {
     @PositiveOrZero(message = "Product quantity should be greater than or equal to zero.")
     @NotNull(message = "Product quantity cannot be null value.")
     private Integer quantity;
+
+    @Size(max = 50, message = "unitOfMeasure must not exceed 500 characters")
+    private String unitOfMeasure;
 
     @ManyToMany()
     @JoinTable(

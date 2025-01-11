@@ -1,5 +1,7 @@
 package com.baseshelf.order;
 
+import com.baseshelf.customer.Customer;
+import com.baseshelf.state.StateCode;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,10 +19,13 @@ public class ProductOrderResponseDto {
     private Long id;
     private LocalDate createdOn;
     private LocalTime orderTime;
-    private Float totalAmount;
+    private Float totalAmountExcludingGst;
     private Float totalGst;
+    private Float totalAmountIncludingGst;
+    private String amountInWords;
     private Integer itemCount;
     private List<OrderItemResponse> orderItems;
+    private Customer customer;
     private StoreResponse store;
 }
 @Data
@@ -30,8 +35,14 @@ public class ProductOrderResponseDto {
 class OrderItemResponse{
     private Long id;
     private Integer quantity;
-    private Float amount;
+    private Float amountExcludingGst;
+    private Float cgst;
+    private Float cgstAmount;
+    private Float sgst;
+    private Float sgstAmount;
     private Float gst;
+    private Float gstAmount;
+    private Float amountIncludingGst;
     private ProductResponse product;
     private OrderType orderType;
 }
@@ -42,9 +53,9 @@ class OrderItemResponse{
 class ProductResponse{
     private Long id;
     private String name;
-    private Float cgst;
-    private Float sgst;
     private Float sellingPrice;
+    private String unitOfMeasure;
+    private String hsnCode;
 }
 @Data
 @NoArgsConstructor
@@ -54,4 +65,6 @@ class StoreResponse{
     private String name;
     private String description;
     private String gstinNumber;
+    private String contactNumber;
+    private StateCode stateCode;
 }

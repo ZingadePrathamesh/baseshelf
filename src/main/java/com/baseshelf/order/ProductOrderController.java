@@ -27,36 +27,44 @@ public class ProductOrderController {
         return productOrderService.getAllByStoreAndFilter(storeId, filter);
     }
 
-    @PostMapping("/lists")
-    public ProductOrderResponseDto createOrderByList(
-            @PathVariable(name = "store-id") Long storeId,
-            @RequestBody List<Long> productIds
-            ){
-        return productOrderService.createOrderByIds(storeId, productIds);
-    }
+//    @PostMapping("/lists")
+//    public ProductOrderResponseDto createOrderByList(
+//            @PathVariable(name = "store-id") Long storeId,
+//            @RequestBody List<Long> productIds
+//            ){
+//        return productOrderService.createOrderByIds(storeId, productIds);
+//    }
+//
+//    @PostMapping("returned/lists")
+//    public ProductOrderResponseDto createReturnOrderByList(
+//            @PathVariable(name = "store-id") Long storeId,
+//            @RequestBody List<Long> productIds
+//            ){
+//        return productOrderService.returnProductByList(storeId, productIds);
+//    }
+//
+//    @PostMapping("/body")
+//    public ProductOrderResponseDto createOrderByRequest(
+//            @PathVariable(name = "store-id") Long storeId,
+//            @RequestBody List<ProductQuantityMap> productQuantityMaps
+//            ){
+//        return productOrderService.createOrderByRequest(storeId, productQuantityMaps);
+//    }
+//
+//    @PostMapping("returned/body")
+//    public ProductOrderResponseDto createReturnOrderByRequest(
+//            @PathVariable(name = "store-id") Long storeId,
+//            @RequestBody List<ProductQuantityMap> productQuantityMaps
+//            ){
+//        return productOrderService.returnProductByOrderRequests(storeId, productQuantityMaps);
+//    }
 
-    @PostMapping("returned/lists")
-    public ProductOrderResponseDto createReturnOrderByList(
+    @PostMapping("/create")
+    public ProductOrderResponseDto createOrder(
             @PathVariable(name = "store-id") Long storeId,
-            @RequestBody List<Long> productIds
-            ){
-        return productOrderService.returnProductByList(storeId, productIds);
-    }
-
-    @PostMapping("/body")
-    public ProductOrderResponseDto createOrderByRequest(
-            @PathVariable(name = "store-id") Long storeId,
-            @RequestBody List<OrderRequest> orderRequests
-            ){
-        return productOrderService.createOrderByRequest(storeId, orderRequests);
-    }
-
-    @PostMapping("returned/body")
-    public ProductOrderResponseDto createReturnOrderByRequest(
-            @PathVariable(name = "store-id") Long storeId,
-            @RequestBody List<OrderRequest> orderRequests
-            ){
-        return productOrderService.returnProductByOrderRequests(storeId, orderRequests);
+            @RequestBody ProductOrderRequest productOrderRequest
+    ){
+        return productOrderService.createOrder(storeId, productOrderRequest);
     }
 
     @DeleteMapping("/{order-id}")

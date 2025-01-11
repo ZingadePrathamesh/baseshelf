@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrderRequest {
+public class ProductQuantityMap {
     private Long productId;
     private Integer quantity;
 }
