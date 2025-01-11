@@ -5,13 +5,11 @@ import com.baseshelf.category.Category;
 import com.baseshelf.order.ProductOrder;
 import com.baseshelf.product.Product;
 import com.baseshelf.utils.BaseEntity;
+import com.baseshelf.state.StateCode;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -44,10 +42,17 @@ public class Store extends BaseEntity {
     private String description;
 
     @Size(max = 50, message = "Description must not exceed 60 characters")
+    private String contactNumber;
+
+    @Size(max = 50, message = "Description must not exceed 60 characters")
     private String address;
 
     @Size(min= 15, max = 16, message = "GSTIN must be 15 characters")
     private String gstinNumber;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "state_code_id")
+    private StateCode stateCode;
 
     @OneToMany(mappedBy = "store", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore

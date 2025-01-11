@@ -33,6 +33,7 @@ class OrderItemResponse{
     private Float amount;
     private Float gst;
     private ProductResponse product;
+    private OrderType orderType;
 }
 @Data
 @NoArgsConstructor

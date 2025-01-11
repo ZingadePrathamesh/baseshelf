@@ -1,5 +1,6 @@
 package com.baseshelf.order;
 
+import com.baseshelf.customer.Customer;
 import com.baseshelf.store.Store;
 import com.baseshelf.utils.BaseEntity;
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -7,11 +8,12 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
-import jakarta.validation.constraints.Size;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -39,6 +41,10 @@ public class ProductOrder extends BaseEntity {
 
 //    @PositiveOrZero(message = "Total GST must be equal to or greater than zero")
     private Float totalGst;
+
+    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "store_id")

@@ -180,11 +180,6 @@ public class ProductOrderService {
                 .orElseThrow(()-> new OrderNotFoundException("Order with id: " + orderId +  "do not exist!")));
     }
 
-//    public List<ProductOrderResponse> getAllByStore(Long storeId) {
-//        Store store = storeService.getById(storeId);
-//        return productOrderRepository.findAllByStore(store);
-//    }
-
     public List<ProductOrderResponseDto> getAllByStoreAndFilter(Long storeId, ProductOrderFilter filter) {
         Specification<ProductOrder> specification = dynamicFilter(storeId, filter);
         List<ProductOrder> productOrders =  productOrderRepository.findAll(specification);
@@ -229,8 +224,10 @@ public class ProductOrderService {
                 .gst(orderItem.getGst())
                 .amount(orderItem.getAmount())
                 .quantity(orderItem.getQuantity())
+                .orderType(orderItem.getOrderType())
                 .product(ProductResponse.builder()
                         .id(orderItem.getProduct().getId())
+                        .name(orderItem.getProduct().getName())
                         .cgst(orderItem.getProduct().getCgst())
                         .sgst(orderItem.getProduct().getSgst())
                         .sellingPrice(orderItem.getProduct().getSellingPrice())
