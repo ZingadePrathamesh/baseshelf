@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -19,10 +20,10 @@ public class ProductOrderResponseDto {
     private Long id;
     private LocalDate createdOn;
     private LocalTime orderTime;
-    private Float totalDiscount;
-    private Float totalAmountExcludingGst;
-    private Float totalGst;
-    private Float totalAmountIncludingGst;
+    private BigDecimal totalDiscount;
+    private BigDecimal totalAmountExcludingGst;
+    private BigDecimal totalGst;
+    private BigDecimal totalAmountIncludingGst;
     private String amountInWords;
     private Integer itemCount;
     private List<OrderItemResponse> orderItems;
@@ -36,15 +37,15 @@ public class ProductOrderResponseDto {
 class OrderItemResponse{
     private Long id;
     private Integer quantity;
-    private Float discountAmount;
-    private Float amountExcludingGst;
+    private BigDecimal discountAmount;
+    private BigDecimal amountExcludingGst;
     private Float cgst;
-    private Float cgstAmount;
+    private BigDecimal cgstAmount;
     private Float sgst;
-    private Float sgstAmount;
+    private BigDecimal sgstAmount;
     private Float gst;
-    private Float gstAmount;
-    private Float amountIncludingGst;
+    private BigDecimal gstAmount;
+    private BigDecimal amountIncludingGst;
     private ProductResponse product;
     private OrderType orderType;
 }

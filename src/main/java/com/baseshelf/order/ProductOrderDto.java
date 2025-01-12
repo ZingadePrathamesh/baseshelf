@@ -1,11 +1,11 @@
 package com.baseshelf.order;
 
-import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -24,7 +24,7 @@ public class ProductOrderDto{
 
     private int itemCount;
 
-    private Float totalAmount;
+    private BigDecimal totalAmount;
 
-    private Float totalGst;
+    private BigDecimal totalGst;
 }

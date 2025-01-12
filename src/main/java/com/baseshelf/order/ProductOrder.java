@@ -14,6 +14,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import java.math.BigDecimal;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -36,14 +37,14 @@ public class ProductOrder extends BaseEntity {
     @PositiveOrZero(message = "Item count cannot be a negative number!")
     private int itemCount;
 
-    private Float totalDiscount;
+    private BigDecimal totalDiscount;
 //    @PositiveOrZero(message = "Product Total Amount must be equal to or greater than zero")
-    private Float totalAmountExcludingGst;
+    private BigDecimal totalAmountExcludingGst;
 
-    private Float totalAmountIncludingGst;
+    private BigDecimal totalAmountIncludingGst;
 
 //    @PositiveOrZero(message = "Total GST must be equal to or greater than zero")
-    private Float totalGst;
+    private BigDecimal totalGst;
 
     private String amountInWords;
 

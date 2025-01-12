@@ -114,10 +114,10 @@ public class ProductOrderService {
     @Transactional
     public ProductOrderResponseDto createOrder(Long storeId, ProductOrderRequest productOrderRequest) {
         Store store = storeService.getById(storeId);
-        float totalAmountExcGst =  0F;
-        float totalAmountIncGst =  0F;
-        float totalGst =  0F;
-        float discountedAmount = 0F;
+        Float totalAmountExcGst = 0F;
+        Float totalAmountIncGst = 0F;
+        Float totalGst =  0F;
+        Float discountedAmount = 0F;
         int itemCount = 0;
         OrderType orderType = OrderType.valueOf(productOrderRequest.getOrderType());
 
@@ -131,11 +131,7 @@ public class ProductOrderService {
 
         ProductOrder productOrder = ProductOrder.builder()
                 .name(LocalDateTime.now().toString())
-                .totalDiscount(0f)
-                .totalAmountExcludingGst(0f)
-                .totalAmountIncludingGst(0f)
                 .amountInWords("")
-                .totalGst(0f)
                 .itemCount(0)
                 .orderTime(LocalTime.now())
                 .customer(customer)
@@ -151,10 +147,10 @@ public class ProductOrderService {
             Float sgst = product.getSgst();
             Float gst = cgst+sgst;
 
-            float discountAmount = product.getDiscountRate()/100 * product.getSellingPrice() * quantity * (orderType.equals(OrderType.SALE)? 1 : -1);
+            Float discountAmount = product.getDiscountRate()/100 * product.getSellingPrice() * quantity * (orderType.equals(OrderType.SALE)? 1 : -1);
             Float amountExcGst = product.getSellingPrice() * quantity * (orderType.equals(OrderType.SALE)? 1 : -1) - discountAmount;
             Float gstAmount = amountExcGst * gst / 100;
-            float amountIncGst = product.isTaxed() ? (amountExcGst + gstAmount) : amountExcGst ;
+            Float amountIncGst = product.isTaxed() ? (amountExcGst + gstAmount) : amountExcGst ;
 
 
             totalAmountExcGst += amountExcGst;
@@ -167,9 +163,9 @@ public class ProductOrderService {
                     .orderType(orderType)
                     .name(String.format("%s : %d", product.getName(), quantity))
                     .quantity(quantity)
-                    .discountAmount(discountAmount)
-                    .amountExcludingGst(amountExcGst)
-                    .amountIncludingGst(amountIncGst)
+                    .discountAmount(BigDecimal.valueOf(discountAmount).setScale(2, RoundingMode.HALF_UP))
+                    .amountExcludingGst(BigDecimal.valueOf(amountExcGst).setScale(2, RoundingMode.HALF_UP))
+                    .amountIncludingGst(BigDecimal.valueOf(amountIncGst).setScale(2, RoundingMode.HALF_UP))
                     .cgst(cgst)
                     .sgst(sgst)
                     .gst(gst)
@@ -183,10 +179,10 @@ public class ProductOrderService {
         productOrder.setAmountInWords(amountInWords);
         productOrder.setOrderItems(orderItems);
         productOrder.setItemCount(itemCount);
-        productOrder.setTotalDiscount(discountedAmount);
-        productOrder.setTotalAmountExcludingGst(totalAmountExcGst);
-        productOrder.setTotalAmountIncludingGst(totalAmountIncGst);
-        productOrder.setTotalGst(totalGst);
+        productOrder.setTotalDiscount(BigDecimal.valueOf(discountedAmount).setScale(2, RoundingMode.HALF_UP));
+        productOrder.setTotalAmountExcludingGst(BigDecimal.valueOf(totalAmountExcGst).setScale(2, RoundingMode.HALF_UP));
+        productOrder.setTotalAmountIncludingGst(BigDecimal.valueOf(totalAmountIncGst).setScale(2, RoundingMode.HALF_UP));
+        productOrder.setTotalGst(BigDecimal.valueOf(totalGst).setScale(2, RoundingMode.HALF_UP));
 
         productOrder = productOrderRepository.save(productOrder);
         return this.getById(storeId, productOrder.getId());
@@ -194,7 +190,7 @@ public class ProductOrderService {
 
     public String numberToWordCustom(Float number){
         BigDecimal value = BigDecimal.valueOf(number).setScale(2, RoundingMode.HALF_UP);
-        return numberToWordsConverter.convert(value);
+        return numberToWordsConverter.convert(value) + " ONLY";
     }
 
     public ProductOrderResponseDto orderResponseDtoMapper(ProductOrder productOrder){
@@ -217,7 +213,7 @@ public class ProductOrderService {
     private List<OrderItemResponse> orderItemResponseMapper(List<OrderItem> orderItems) {
         return orderItems.stream().map(
                 (oi)->{
-                    Float amountExcGst = oi.getAmountExcludingGst();
+                    BigDecimal amountExcGst = oi.getAmountExcludingGst();
                     Product product = oi.getProduct();
                     return OrderItemResponse.builder()
                             .id(oi.getId())
@@ -225,11 +221,11 @@ public class ProductOrderService {
                             .discountAmount(oi.getDiscountAmount())
                             .amountExcludingGst(amountExcGst)
                             .cgst(oi.getCgst())
-                            .cgstAmount(amountExcGst * oi.getCgst()/100)
+                            .cgstAmount((amountExcGst.multiply(BigDecimal.valueOf(oi.getCgst()/100))).setScale(2, RoundingMode.HALF_UP))
                             .sgst(oi.getSgst())
-                            .sgstAmount(amountExcGst * oi.getCgst()/100)
+                            .sgstAmount((amountExcGst.multiply(BigDecimal.valueOf(oi.getSgst()/100))).setScale(2, RoundingMode.HALF_UP))
                             .gst(oi.getGst())
-                            .gstAmount(amountExcGst * oi.getGst()/100)
+                            .gstAmount((amountExcGst.multiply(BigDecimal.valueOf(oi.getGst()/100))).setScale(2, RoundingMode.HALF_UP))
                             .amountIncludingGst(oi.getAmountIncludingGst())
                             .quantity(oi.getQuantity())
                             .product(ProductResponse.builder()

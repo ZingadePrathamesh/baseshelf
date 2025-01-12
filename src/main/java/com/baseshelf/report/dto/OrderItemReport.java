@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 
@@ -21,11 +22,11 @@ public class OrderItemReport {
     private String productName;
     private Float sellingPrice;
     private Integer quantity;
-    private Float amount;
+    private BigDecimal amount;
     private Long brandId;
     private String brandName;
 
-    public OrderItemReport(Long orderId, Long itemId, LocalDate date, Long productId, String productName, Float sellingPrice, Integer quantity, Float amount, Long brandId, String brandName) {
+    public OrderItemReport(Long orderId, Long itemId, LocalDate date, Long productId, String productName, Float sellingPrice, Integer quantity, BigDecimal amount, Long brandId, String brandName) {
         this.orderId = orderId;
         this.itemId = itemId;
         this.date = date;

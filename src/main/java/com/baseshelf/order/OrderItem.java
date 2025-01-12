@@ -11,6 +11,8 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import java.math.BigDecimal;
+
 
 @Entity
 @Data
@@ -36,11 +38,11 @@ public class OrderItem extends BaseEntity {
     private Integer quantity;
 
 //    @PositiveOrZero(message = "Amount must be equal to or greater than zero")
-    private Float amountIncludingGst;
+    private BigDecimal amountIncludingGst;
 
-    private Float amountExcludingGst;
+    private BigDecimal amountExcludingGst;
 
-    private Float discountAmount;
+    private BigDecimal discountAmount;
 
     private Float cgst;
 
