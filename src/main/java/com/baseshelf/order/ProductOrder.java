@@ -36,6 +36,7 @@ public class ProductOrder extends BaseEntity {
     @PositiveOrZero(message = "Item count cannot be a negative number!")
     private int itemCount;
 
+    private Float totalDiscount;
 //    @PositiveOrZero(message = "Product Total Amount must be equal to or greater than zero")
     private Float totalAmountExcludingGst;
 

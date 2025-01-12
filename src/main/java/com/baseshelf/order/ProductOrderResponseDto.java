@@ -19,6 +19,7 @@ public class ProductOrderResponseDto {
     private Long id;
     private LocalDate createdOn;
     private LocalTime orderTime;
+    private Float totalDiscount;
     private Float totalAmountExcludingGst;
     private Float totalGst;
     private Float totalAmountIncludingGst;
@@ -35,6 +36,7 @@ public class ProductOrderResponseDto {
 class OrderItemResponse{
     private Long id;
     private Integer quantity;
+    private Float discountAmount;
     private Float amountExcludingGst;
     private Float cgst;
     private Float cgstAmount;
@@ -54,6 +56,7 @@ class ProductResponse{
     private Long id;
     private String name;
     private Float sellingPrice;
+    private Float discountRate;
     private String unitOfMeasure;
     private String hsnCode;
 }

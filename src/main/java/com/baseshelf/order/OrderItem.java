@@ -40,6 +40,8 @@ public class OrderItem extends BaseEntity {
 
     private Float amountExcludingGst;
 
+    private Float discountAmount;
+
     private Float cgst;
 
     private Float sgst;

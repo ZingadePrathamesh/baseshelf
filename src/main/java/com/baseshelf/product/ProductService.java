@@ -74,6 +74,7 @@ public class ProductService {
                 List<Category> categories = List.of(material, color, productT, size);
                 float costPrize = faker.number().numberBetween(150, 10000);
                 float sellingPrize = costPrize + costPrize * 40 / 100 ;
+                float discountRate = faker.number().numberBetween(0, 20);
 
                 Product product = Product.builder()
                         .name(color.getName()+ " " + productT.getName())
@@ -83,6 +84,7 @@ public class ProductService {
                         .sgst(18.0F)
                         .costPrice(costPrize)
                         .sellingPrice(sellingPrize)
+                        .discountRate(discountRate)
                         .taxed(true)
                         .quantity(faker.number().numberBetween(10, 100))
                         .isActive(true)
@@ -139,34 +141,6 @@ public class ProductService {
     public List<Product> getAllByStoreAndIds(Long storeId, Set<Long> productIds){
         Store store = storeService.getById(storeId);
         return productRepository.findAllByStoreAndIdIn(store, productIds);
-    }
-
-    @Transactional
-    public Set<Product> validateProductsAndQuantity(Long storeId, Map<Long, Integer> productMap){
-        Store store =  storeService.getById(storeId);
-        List<Product> uncheckProducts = productRepository.findAllByStoreAndIdIn(store, productMap.keySet());
-        Set<Product> checkedProducts = new HashSet<>();
-
-        Map<Long, Product> productMap1 = uncheckProducts.stream()
-                .collect(Collectors.toMap(Product::getId, Function.identity()));
-
-        for(Map.Entry<Long, Integer> pm : productMap.entrySet()){
-            Product product = productMap1.get(pm.getKey());
-
-            if(product == null){
-                throw new ProductNotFoundException("product with id: " + pm.getKey() + " does not exist");
-            }
-
-            int newValue = product.getQuantity() - pm.getValue();
-            if(newValue < 0){
-               throw new ProductQuantityExceedException("Product with id: " + pm.getKey() + " exceeds in quantity by "+ Math.abs(newValue));
-           }
-           else{
-               product.setQuantity(newValue);
-               checkedProducts.add(product);
-           }
-        }
-        return checkedProducts;
     }
 
     public Product saveProduct(Long storeId, @Valid Product product) {
@@ -345,24 +319,6 @@ public class ProductService {
             }
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
-    }
-
-    @Transactional
-    public Set<Product> returnedProducts(Store store, Map<Long, Integer> productMap) {
-        Set<Long> productIds = productMap.keySet();
-        List<Product> fetchedProducts = productRepository.findAllByStoreAndIdIn(store, productIds);
-        Map<Long, Product> productsMap = fetchedProducts.stream().collect(Collectors.toMap(Product::getId, product->product));
-        Set<Product> updatedProducts = new HashSet<>();
-
-        for(Long id: productIds){
-           Product product = productsMap.get(id);
-           if(product == null){
-               throw new ProductNotFoundException("Product with id: " + id + " not found!");
-           }
-           product.setQuantity(product.getQuantity() + productMap.get(id));
-           updatedProducts.add(product);
-        }
-        return updatedProducts;
     }
 
     @Transactional

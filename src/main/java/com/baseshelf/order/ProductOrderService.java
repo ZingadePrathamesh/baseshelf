@@ -5,16 +5,18 @@ import com.baseshelf.product.Product;
 import com.baseshelf.product.ProductService;
 import com.baseshelf.store.Store;
 import com.baseshelf.store.StoreService;
+import com.baseshelf.utils.NumberToWordsConverter;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import net.datafaker.Faker;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Bean;
 import org.springframework.core.annotation.Order;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -28,8 +30,10 @@ public class ProductOrderService {
     private final ProductOrderRepository productOrderRepository;
     private final ProductService productService;
     private final StoreService storeService;
+    private final NumberToWordsConverter numberToWordsConverter;
 
-    @Bean
+
+//    @Bean
     @Order(value = 5)
     public CommandLineRunner insertOrder(
             ProductOrderRepository productOrderRepository,
@@ -67,10 +71,10 @@ public class ProductOrderService {
                 .toList();
     }
 
-    public List<ProductOrder> findAllByStoreAndFilter(Long storeId, ProductOrderFilter filter) {
-        Specification<ProductOrder> specification = dynamicFilter(storeId, filter);
-        return productOrderRepository.findAll(specification);
-    }
+//    public List<ProductOrder> findAllByStoreAndFilter(Long storeId, ProductOrderFilter filter) {
+//        Specification<ProductOrder> specification = dynamicFilter(storeId, filter);
+//        return productOrderRepository.findAll(specification);
+//    }
 
     public void deleteByStoreAndId(Long storeId, Long orderId){
         Store store = storeService.getById(storeId);
@@ -110,14 +114,15 @@ public class ProductOrderService {
     @Transactional
     public ProductOrderResponseDto createOrder(Long storeId, ProductOrderRequest productOrderRequest) {
         Store store = storeService.getById(storeId);
-        Float totalAmountExcGst =  0F;
-        Float totalAmountIncGst =  0F;
-        Float totalGst =  0F;
-        Integer itemCount = 0;
+        float totalAmountExcGst =  0F;
+        float totalAmountIncGst =  0F;
+        float totalGst =  0F;
+        float discountedAmount = 0F;
+        int itemCount = 0;
         OrderType orderType = OrderType.valueOf(productOrderRequest.getOrderType());
 
         Customer customer = productOrderRequest.getCustomer();
-        Map<Long, Product> products = null;
+        Map<Long, Product> products;
 
         if(orderType.equals(OrderType.SALE))
              products = productService.validateProductsAndQuantity(store, productOrderRequest.getProductMap());
@@ -126,6 +131,7 @@ public class ProductOrderService {
 
         ProductOrder productOrder = ProductOrder.builder()
                 .name(LocalDateTime.now().toString())
+                .totalDiscount(0f)
                 .totalAmountExcludingGst(0f)
                 .totalAmountIncludingGst(0f)
                 .amountInWords("")
@@ -145,12 +151,15 @@ public class ProductOrderService {
             Float sgst = product.getSgst();
             Float gst = cgst+sgst;
 
-            Float amountExcGst = product.getSellingPrice() * quantity * (orderType.equals(OrderType.SALE)? 1 : -1);
+            float discountAmount = product.getDiscountRate()/100 * product.getSellingPrice() * quantity * (orderType.equals(OrderType.SALE)? 1 : -1);
+            Float amountExcGst = product.getSellingPrice() * quantity * (orderType.equals(OrderType.SALE)? 1 : -1) - discountAmount;
             Float gstAmount = amountExcGst * gst / 100;
-            Float amountIncGst = product.isTaxed() ? (amountExcGst + gstAmount) : amountExcGst ;
+            float amountIncGst = product.isTaxed() ? (amountExcGst + gstAmount) : amountExcGst ;
+
 
             totalAmountExcGst += amountExcGst;
             totalAmountIncGst += amountIncGst;
+            discountedAmount += discountAmount;
             totalGst += product.isTaxed() ? gstAmount : 0;
             itemCount += quantity;
 
@@ -158,6 +167,7 @@ public class ProductOrderService {
                     .orderType(orderType)
                     .name(String.format("%s : %d", product.getName(), quantity))
                     .quantity(quantity)
+                    .discountAmount(discountAmount)
                     .amountExcludingGst(amountExcGst)
                     .amountIncludingGst(amountIncGst)
                     .cgst(cgst)
@@ -169,8 +179,11 @@ public class ProductOrderService {
             orderItems.add(orderItem);
         }
 
+        String amountInWords = numberToWordCustom(totalAmountIncGst);
+        productOrder.setAmountInWords(amountInWords);
         productOrder.setOrderItems(orderItems);
         productOrder.setItemCount(itemCount);
+        productOrder.setTotalDiscount(discountedAmount);
         productOrder.setTotalAmountExcludingGst(totalAmountExcGst);
         productOrder.setTotalAmountIncludingGst(totalAmountIncGst);
         productOrder.setTotalGst(totalGst);
@@ -179,11 +192,17 @@ public class ProductOrderService {
         return this.getById(storeId, productOrder.getId());
     }
 
+    public String numberToWordCustom(Float number){
+        BigDecimal value = BigDecimal.valueOf(number).setScale(2, RoundingMode.HALF_UP);
+        return numberToWordsConverter.convert(value);
+    }
+
     public ProductOrderResponseDto orderResponseDtoMapper(ProductOrder productOrder){
         return ProductOrderResponseDto.builder()
                 .id(productOrder.getId())
                 .createdOn(productOrder.getCreatedOn())
                 .orderTime(productOrder.getOrderTime())
+                .totalDiscount(productOrder.getTotalDiscount())
                 .totalAmountExcludingGst(productOrder.getTotalAmountExcludingGst())
                 .totalAmountIncludingGst(productOrder.getTotalAmountIncludingGst())
                 .totalGst(productOrder.getTotalGst())
@@ -203,6 +222,7 @@ public class ProductOrderService {
                     return OrderItemResponse.builder()
                             .id(oi.getId())
                             .orderType(oi.getOrderType())
+                            .discountAmount(oi.getDiscountAmount())
                             .amountExcludingGst(amountExcGst)
                             .cgst(oi.getCgst())
                             .cgstAmount(amountExcGst * oi.getCgst()/100)
@@ -218,6 +238,7 @@ public class ProductOrderService {
                                     .hsnCode(product.getHsnCode())
                                     .unitOfMeasure(product.getUnitOfMeasure())
                                     .sellingPrice(product.getSellingPrice())
+                                    .discountRate(product.getDiscountRate())
                                     .build())
                             .build();
                 }

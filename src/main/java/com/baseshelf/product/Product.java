@@ -38,6 +38,9 @@ public class Product extends BaseEntity {
     @PositiveOrZero(message = "Selling Price cannot be negative")
     private Float sellingPrice;
 
+    @PositiveOrZero(message = "Discount rates cannot be negative")
+    private Float discountRate;
+
     @PositiveOrZero(message = "Cost Price cannot be negative")
     private Float costPrice;
 
