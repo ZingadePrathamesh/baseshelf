@@ -1,4 +1,4 @@
-package com.baseshelf.barcode;
+package com.baseshelf.printing;
 
 
 public class CustomBarcodeException extends Throwable {

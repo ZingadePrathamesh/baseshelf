@@ -97,6 +97,14 @@ public class ProductController {
         return productService.getProductLabelStream(storeId, productId);
     }
 
+    @GetMapping("product-id/{product-id}/barcode-stream")
+    public ResponseEntity<StreamingResponseBody> getBarcodeByProductId(
+            @PathVariable(name = "store-id") Long storeId,
+            @PathVariable(name = "product-id") Long productId
+    ) throws OutputException, BarcodeException {
+        return productService.getBarcodeByProductId(storeId, productId);
+    }
+
     @PostMapping("")
     public Product saveNewProduct(
             @PathVariable(name = "store-id") Long storeId,

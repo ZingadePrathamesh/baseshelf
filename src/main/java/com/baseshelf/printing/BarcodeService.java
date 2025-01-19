@@ -1,4 +1,4 @@
-package com.baseshelf.barcode;
+package com.baseshelf.printing;
 
 import com.baseshelf.product.Product;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +39,7 @@ public class BarcodeService {
     }
 
     public BufferedImage createProductLabel(Product product) throws BarcodeException, OutputException {
-        int labelWidth = 240;
+        int labelWidth = 196;
         int lableHeight = 120;
 
         BufferedImage bufferedImage = new BufferedImage(labelWidth, lableHeight, BufferedImage.TYPE_INT_RGB);
@@ -50,23 +50,57 @@ public class BarcodeService {
 
         // Draw the product name
         graphics2D.setColor(Color.BLACK);
-        graphics2D.setFont(new Font("Arial", Font.BOLD, 14));
+        graphics2D.setFont(new Font("Arial", Font.ITALIC, 12));
         graphics2D.drawString("Product: " + product.getName(), 20, 20);
 
         // Draw the price
         graphics2D.setFont(new Font("Arial", Font.PLAIN, 12));
-        graphics2D.drawString("Price: $" + product.getSellingPrice(), 20, 40);
+        graphics2D.drawString("Price: $" + product.getSellingPrice(), 20, 35);
 
         //Draw the brand
         graphics2D.setFont(new Font("Arial", Font.PLAIN, 12));
-        graphics2D.drawString("Brand: " + product.getBrand().getName(), 20, 60);
+        graphics2D.drawString("Brand: " + product.getBrand().getName(), 20, 50);
 
-        int x = labelWidth/2 -  150/2;
+        String plainText = product.getId().toString();
+
+        int x = labelWidth/2 -  180/2;
         // Generate and draw the barcode
-        BufferedImage barcodeImage = generateCode128BarcodeImage(product.getId().toString());
-        graphics2D.drawImage(barcodeImage, x, 80, 150 , 30 ,null);
+        BufferedImage barcodeImage = generateCode128BarcodeImage(plainText);
+        graphics2D.drawImage(barcodeImage, x, 60, 180 , 35 ,null);
+
+        Font font = new Font("ARIAL", Font.PLAIN, 14);
+        FontMetrics metrics = graphics2D.getFontMetrics(font);
+        graphics2D.setFont(font);
+        graphics2D.setColor(Color.BLACK);
+        graphics2D.drawString(plainText, labelWidth/2 - metrics.stringWidth(plainText)/2, 110);
 
         // Clean up
+        graphics2D.dispose();
+
+        return bufferedImage;
+    }
+
+    public BufferedImage createBarcode(String plainText) throws OutputException, BarcodeException {
+        int labelWidth  = 192;
+        int labelHeight = 80;
+
+        BufferedImage bufferedImage = new BufferedImage(labelWidth, labelHeight, BufferedImage.TYPE_INT_RGB);
+
+        Graphics2D graphics2D = bufferedImage.createGraphics();
+        graphics2D.setBackground(Color.WHITE);
+        graphics2D.fillRect(0, 0, labelWidth, labelHeight);
+
+        int x = labelWidth/2 - 180/2;
+        // Generate and draw the barcode
+        BufferedImage barcodeImage = generateCode128BarcodeImage(plainText);
+        graphics2D.drawImage(barcodeImage, x, 10, 180 , 45,null);
+
+        Font font = new Font("ARIAL", Font.PLAIN, 14);
+        FontMetrics metrics = graphics2D.getFontMetrics(font);
+        graphics2D.setFont(font);
+        graphics2D.setColor(Color.BLACK);
+        graphics2D.drawString(plainText, labelWidth/2 - metrics.stringWidth(plainText)/2, 70);
+
         graphics2D.dispose();
 
         return bufferedImage;

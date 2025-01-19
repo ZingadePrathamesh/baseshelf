@@ -1,6 +1,11 @@
 package com.baseshelf.order;
 
 import com.baseshelf.customer.Customer;
+import com.baseshelf.order.response.OrderItemResponse;
+import com.baseshelf.order.response.ProductOrderResponseDto;
+import com.baseshelf.order.response.ProductResponse;
+import com.baseshelf.order.response.StoreResponse;
+import com.baseshelf.printing.ReceiptService;
 import com.baseshelf.product.Product;
 import com.baseshelf.product.ProductService;
 import com.baseshelf.state.StateService;
@@ -15,15 +20,22 @@ import net.datafaker.Faker;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +45,7 @@ public class ProductOrderService {
     private final StoreService storeService;
     private final NumberToWordsConverter numberToWordsConverter;
     private final StateService stateService;
+    private final ReceiptService receiptService;
 
 
 //    @Bean
@@ -136,7 +149,7 @@ public class ProductOrderService {
     }
 
     @Transactional
-    public ProductOrderResponseDto createOrder(Long storeId, ProductOrderRequest productOrderRequest) {
+    public ResponseEntity<ProductOrderResponseDto> createOrder(Long storeId, ProductOrderRequest productOrderRequest) {
         validateCustomer(productOrderRequest.getCustomer());
         Store store = storeService.getById(storeId);
         Float totalAmountExcGst = 0F;
@@ -209,8 +222,21 @@ public class ProductOrderService {
         productOrder.setTotalAmountIncludingGst(BigDecimal.valueOf(totalAmountIncGst).setScale(2, RoundingMode.HALF_UP));
         productOrder.setTotalGst(BigDecimal.valueOf(totalGst).setScale(2, RoundingMode.HALF_UP));
 
-        productOrder = productOrderRepository.save(productOrder);
-        return this.getDtoById(storeId, productOrder.getId());
+        ProductOrderResponseDto dto = this.orderResponseDtoMapper(productOrderRepository.save(productOrder));
+
+        // Generate Receipt as BufferedImage
+        BufferedImage bufferedImage = receiptService.createReceipt(dto);
+
+        // Convert the receipt image to Base64 string
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try {
+            ImageIO.write(bufferedImage, "png", baos);
+        } catch (IOException e) {
+            throw new RuntimeException("Error generating receipt image", e);
+        }
+        String receiptBase64 = Base64.getEncoder().encodeToString(baos.toByteArray());
+        dto.setReceiptBase64(receiptBase64);
+        return ResponseEntity.ok(dto);
     }
 
     public String numberToWordCustom(Float number){
@@ -273,6 +299,22 @@ public class ProductOrderService {
                 .stateCode(store.getStateCode())
                 .gstinNumber(store.getGstinNumber())
                 .description(store.getDescription())
+                .address(store.getAddress())
                 .build();
+    }
+
+    public ResponseEntity<StreamingResponseBody> generateReceipt(Long storeId, Long orderId) {
+        ProductOrderResponseDto productOrderResponseDto = getDtoById(storeId, orderId);
+
+        BufferedImage bufferedImage = receiptService.createReceipt(productOrderResponseDto);
+        StreamingResponseBody streamingResponseBody = outputStream -> {
+            ImageIO.write(bufferedImage, "png", outputStream);
+            outputStream.flush();
+        };
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.IMAGE_PNG);
+
+        return new ResponseEntity<>(streamingResponseBody, httpHeaders, HttpStatus.OK);
     }
 }

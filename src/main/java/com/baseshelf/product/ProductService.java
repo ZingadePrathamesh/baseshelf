@@ -1,6 +1,6 @@
 package com.baseshelf.product;
 
-import com.baseshelf.barcode.BarcodeService;
+import com.baseshelf.printing.BarcodeService;
 import com.baseshelf.brand.Brand;
 import com.baseshelf.brand.BrandService;
 import com.baseshelf.category.Category;
@@ -208,6 +208,21 @@ public class ProductService {
         return new ResponseEntity<>(streamingResponseBody, httpHeaders, HttpStatus.OK);
     }
 
+    public ResponseEntity<StreamingResponseBody> getBarcodeByProductId(Long storeId, Long productId) throws OutputException, BarcodeException {
+        Product product = getByIdAndStore(productId, storeId);
+        BufferedImage bufferedImage = barcodeService.createBarcode(product.getId().toString());
+
+        StreamingResponseBody streamingResponseBody = outputStream -> {
+          ImageIO.write(bufferedImage, "png", outputStream);
+          outputStream.flush();
+        };
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.IMAGE_PNG);
+
+        return new ResponseEntity<>(streamingResponseBody, httpHeaders, HttpStatus.OK);
+    }
+
     @Transactional
     public Product updateProductByStoreAndId(Long storeId, Long productId, @Valid Product product) {
         Brand brand = brandService.getBrandById(storeId, product.getBrand().getId());
@@ -402,4 +417,6 @@ public class ProductService {
         }
         return productMap;
     }
+
+
 }

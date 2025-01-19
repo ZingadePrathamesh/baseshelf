@@ -1,8 +1,11 @@
 package com.baseshelf.order;
 
+import com.baseshelf.order.response.ProductOrderResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.util.List;
 
@@ -21,8 +24,16 @@ public class ProductOrderController {
         return productOrderService.getAllByStoreAndFilter(storeId, filter);
     }
 
+    @GetMapping("/order-id/{order-id}/receipt")
+    public ResponseEntity<StreamingResponseBody> getReceipt(
+            @PathVariable(name = "store-id") Long storeId,
+            @PathVariable(name = "order-id") Long orderId
+    ){
+        return productOrderService.generateReceipt(storeId, orderId);
+    }
+
     @PostMapping("/create")
-    public ProductOrderResponseDto createOrder(
+    public ResponseEntity<ProductOrderResponseDto> createOrder(
             @PathVariable(name = "store-id") Long storeId,
             @RequestBody @Valid ProductOrderRequest productOrderRequest
 

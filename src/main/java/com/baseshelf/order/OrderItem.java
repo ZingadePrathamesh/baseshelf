@@ -55,6 +55,3 @@ public class OrderItem extends BaseEntity {
     private OrderType orderType;
 }
 
-enum OrderType{
-    SALE, RETURN
-}
