@@ -29,7 +29,7 @@ public class CategoryService {
     }
 
     @Bean
-    @Order(value = 3)
+    @Order(value = 4)
     public CommandLineRunner insertCategory(
             CategoryJpaRepository categoryJpaRepository
     ){

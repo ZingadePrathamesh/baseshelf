@@ -8,7 +8,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("stores/{store-id}/orders")
+@RequestMapping("stores/store-id/{store-id}/orders")
 public class ProductOrderController {
     private final ProductOrderService productOrderService;
 
@@ -30,7 +30,7 @@ public class ProductOrderController {
         return productOrderService.createOrder(storeId, productOrderRequest);
     }
 
-    @DeleteMapping("/{order-id}")
+    @DeleteMapping("order-id/{order-id}")
     public void deleteByStoreAndId(
             @PathVariable(name = "store-id") Long storeId,
             @PathVariable(name = "order-id") Long orderId

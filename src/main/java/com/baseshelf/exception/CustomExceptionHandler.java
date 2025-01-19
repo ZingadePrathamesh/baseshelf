@@ -6,7 +6,10 @@ import com.baseshelf.category.CategoryNotFoundException;
 import com.baseshelf.order.OrderNotFoundException;
 import com.baseshelf.product.ProductNotFoundException;
 import com.baseshelf.product.ProductQuantityExceedException;
+import com.baseshelf.state.StateCodeNotFoundException;
 import com.baseshelf.store.StoreNotFoundException;
+import com.baseshelf.supplier.SupplierNotFoundException;
+import com.baseshelf.utils.InvalidGSTINException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -25,8 +28,11 @@ import java.util.Map;
 @ControllerAdvice
 public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
 
-    @ExceptionHandler({CategoryNotFoundException.class, StoreNotFoundException.class,
-            BrandNotFoundException.class, ProductNotFoundException.class, OrderNotFoundException.class})
+    @ExceptionHandler({
+            CategoryNotFoundException.class, StoreNotFoundException.class,
+            BrandNotFoundException.class, ProductNotFoundException.class, OrderNotFoundException.class,
+            SupplierNotFoundException.class, StateCodeNotFoundException.class
+    })
     public final ResponseEntity<ErrorDetails> handleResourceNotFoundException(
             Exception ex, WebRequest request)
     throws Exception{
@@ -36,7 +42,7 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler({ProductQuantityExceedException.class})
+    @ExceptionHandler({ProductQuantityExceedException.class, InvalidGSTINException.class})
     public final ResponseEntity<ErrorDetails> handleBadRequestException(
             Exception ex, WebRequest request)
     throws Exception{

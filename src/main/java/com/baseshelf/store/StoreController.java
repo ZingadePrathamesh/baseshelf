@@ -18,7 +18,7 @@ public class StoreController {
         return storeService.getAllStores();
     }
 
-    @GetMapping("id/{id}")
+    @GetMapping("store-id/{id}")
     public Store getStoreById(@PathVariable(name = "id") Long id){
         return storeService.getById(id);
     }
@@ -33,17 +33,17 @@ public class StoreController {
         return storeService.registerStore(store);
     }
 
-    @PutMapping("/disable/id/{id}")
+    @PutMapping("/disable/store-id/{id}")
     public void disableStore(@PathVariable(name = "id") Long id){
         storeService.disableStore(id);
     }
 
-    @DeleteMapping("/delete/id/{id}")
+    @DeleteMapping("/delete/store-id/{id}")
     public void deleteStore(@PathVariable(name = "id") Long id){
         storeService.deleteStore(id);
     }
 
-    @PutMapping("/update/id/{id}")
+    @PutMapping("/update/store-id/{id}")
     public Store updateStore(@PathVariable(name = "id") Long id, @Valid @RequestBody StoreDto storeDto){
         return storeService.updateStoreById(id, storeDto);
     }

@@ -14,7 +14,7 @@ import java.util.Set;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("stores/{store-id}/products")
+@RequestMapping("stores/store-id/{store-id}/products")
 public class ProductController {
     private final ProductService productService;
 
@@ -25,7 +25,7 @@ public class ProductController {
         return productService.getAllProductsFromStore(storeId);
     }
 
-    @GetMapping("/brands/{brand-id}")
+    @GetMapping("/brand-id/{brand-id}")
     public List<Product> getAllByBrand(
             @PathVariable(name = "store-id") Long storeId,
             @PathVariable(name = "brand-id") Long brandId
@@ -65,7 +65,7 @@ public class ProductController {
         return productService.getAllByStoreAndIds(storeId, productIds);
     }
 
-    @GetMapping("/{product-id}")
+    @GetMapping("product-id/{product-id}")
     public Product getProductByStoreAndId(
             @PathVariable(name = "store-id") Long storeId,
             @PathVariable(name = "product-id") Long productId
@@ -73,7 +73,7 @@ public class ProductController {
         return productService.getByIdAndStore(productId, storeId);
     }
 
-    @GetMapping("/{product-id}/barcode")
+    @GetMapping("product-id/{product-id}/barcode")
     public ResponseEntity<byte[]> getProductBarCodeById(
             @PathVariable(name = "store-id") Long storeId,
             @PathVariable(name = "product-id") Long productId
@@ -81,7 +81,7 @@ public class ProductController {
         return productService.getBarcodeForProduct(storeId, productId);
     }
 
-    @GetMapping("/{product-id}/label")
+    @GetMapping("product-id/{product-id}/label")
     public ResponseEntity<byte[]> getProductLabelById(
             @PathVariable(name = "store-id") Long storeId,
             @PathVariable(name = "product-id") Long productId
@@ -89,7 +89,7 @@ public class ProductController {
         return productService.getProductLabel(storeId, productId);
     }
 
-    @GetMapping("/{product-id}/label-stream")
+    @GetMapping("product-id/{product-id}/label-stream")
     public ResponseEntity<StreamingResponseBody> getProductLabelStreamById(
             @PathVariable(name = "store-id") Long storeId,
             @PathVariable(name = "product-id") Long productId
@@ -113,7 +113,7 @@ public class ProductController {
         productService.deleteById(storeId, productIds);
     }
 
-    @PutMapping("{product-id}")
+    @PutMapping("product-id/{product-id}")
     public Product updateProductByStoreAndId(
             @PathVariable(name = "store-id") Long storeId,
             @PathVariable(name = "product-id") Long productId,
@@ -122,12 +122,12 @@ public class ProductController {
         return productService.updateProductByStoreAndId(storeId, productId, product);
     }
 
-    @PutMapping("{product-id}/restock")
-    public Product restockProductByIdAndQuantity(
+    @PutMapping("product-id/{product-id}/restock")
+    public Product adjustStock(
             @PathVariable(name = "store-id") Long storeId,
             @PathVariable(name = "product-id") Long productId,
-            @RequestBody Integer quantity
+            @RequestBody Integer newQuantity
     ){
-        return productService.restockProduct(storeId, productId, quantity);
+        return productService.adjustStock(storeId, productId, newQuantity);
     }
 }

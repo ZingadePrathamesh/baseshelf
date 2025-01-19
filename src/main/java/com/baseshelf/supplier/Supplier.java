@@ -1,4 +1,4 @@
-package com.baseshelf.brand;
+package com.baseshelf.supplier;
 
 import com.baseshelf.product.Product;
 import com.baseshelf.store.Store;
@@ -21,9 +21,12 @@ import java.util.List;
 @AllArgsConstructor
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true)
-public class Brand extends BaseEntity {
+public class Supplier extends BaseEntity {
     @Size(max = 500, message = "Description must not exceed 500 characters")
     private String description;
+
+    @Size(max = 16, min = 15, message = "GSTIN must be between 15 to 16 characters")
+    private String gstin;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "store_id")
@@ -32,9 +35,8 @@ public class Brand extends BaseEntity {
     private Store store;
 
 
-    @OneToMany(mappedBy = "brand")
+    @OneToMany(mappedBy = "supplier")
     @JsonBackReference
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private List<Product> products;
-
 }

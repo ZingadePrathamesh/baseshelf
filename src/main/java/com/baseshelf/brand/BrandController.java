@@ -30,7 +30,7 @@ public class BrandController {
             @PathVariable("store-id") Long storeId,
             @Valid @RequestBody Brand brand
     ){
-        return brandService.registerBrand(storeId, brand);
+        return brandService.createBrand(storeId, brand);
     }
 
     @GetMapping("brand-id/{brand-id}")

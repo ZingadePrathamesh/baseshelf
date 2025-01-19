@@ -2,6 +2,7 @@ package com.baseshelf.product;
 
 import com.baseshelf.brand.Brand;
 import com.baseshelf.category.Category;
+import com.baseshelf.supplier.Supplier;
 import com.baseshelf.store.Store;
 import com.baseshelf.utils.BaseEntity;
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -84,4 +85,8 @@ public class Product extends BaseEntity {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "brand_id")
     private Brand brand;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "supplier_id")
+    private Supplier supplier;
 }

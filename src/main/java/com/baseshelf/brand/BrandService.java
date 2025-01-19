@@ -31,7 +31,7 @@ public class BrandService {
     }
 
     @Bean
-    @Order(value = 2)
+    @Order(value = 3)
     public CommandLineRunner insertBrand(
             BrandRepository brandRepository, StoreService storeService
     ){
@@ -63,7 +63,7 @@ public class BrandService {
                 new BrandNotFoundException("Brand with name "+ name + " does not exists"));
     }
 
-    public Brand registerBrand(Long storeId, Brand brand) {
+    public Brand createBrand(Long storeId, Brand brand) {
         Store store=  storeService.getById(storeId);
         Optional<Brand> brandOptional = brandRepository.findByStoreAndName(store, brand.getName());
         brand.setStore(store);

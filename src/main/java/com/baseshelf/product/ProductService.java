@@ -49,7 +49,7 @@ public class ProductService {
     private final BarcodeService barcodeService;
 
     @Bean
-    @Order(value = 4)
+    @Order(value = 6)
     public CommandLineRunner insertProducts(
             ProductRepository productRepository,
             StoreService storeService,
@@ -238,26 +238,26 @@ public class ProductService {
     }
 
     @Transactional
-    public Product restockProduct(Long storeId, Long productId, Integer quantity){
+    public Product adjustStock(Long storeId, Long productId, Integer quantity){
         Product product = getByIdAndStore(productId, storeId);
-        product.setQuantity(product.getQuantity() + quantity);
+        product.setQuantity(quantity);
         return product;
     }
 
     Specification<Product> dynamicProductFilter(Long storeId, ProductFilter productFilter) {
         return (root, query, criteriaBuilder) -> {
-            Set<Predicate> predicates = new HashSet<>();
+            List<Predicate> predicates = new ArrayList<>();
 
             // Ensure storeId is valid and fetch store
             if (storeId == null) {
-                throw new StoreNotFoundException("Store id is required");
+                throw new StoreNotFoundException("Store ID is required");
             }
             Store store = storeService.getById(storeId);
             predicates.add(criteriaBuilder.equal(root.get("store"), store));
 
             // Filter by name with partial matching
             if (productFilter.getName() != null) {
-                String pattern = "%" + productFilter.getName() + "%";
+                String pattern = "%" + productFilter.getName().trim() + "%";
                 predicates.add(criteriaBuilder.like(root.get("name"), pattern));
             }
 
@@ -266,7 +266,7 @@ public class ProductService {
                 predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("quantity"), productFilter.getLowerQuantity()));
             }
             if (productFilter.getHigherQuantity() != null) {
-                predicates.add(criteriaBuilder.lessThan(root.get("quantity"), productFilter.getHigherQuantity()));
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("quantity"), productFilter.getHigherQuantity()));
             }
 
             // Filter by price range
@@ -274,16 +274,10 @@ public class ProductService {
                 predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("sellingPrice"), productFilter.getLowerPrice()));
             }
             if (productFilter.getHigherPrice() != null) {
-                predicates.add(criteriaBuilder.lessThan(root.get("sellingPrice"), productFilter.getHigherPrice()));
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("sellingPrice"), productFilter.getHigherPrice()));
             }
 
-            // Filter by brand
-            if (productFilter.getBrandId() != null) {
-                Brand brand = brandService.getBrandById(storeId, productFilter.getBrandId());
-                predicates.add(criteriaBuilder.equal(root.get("brand"), brand));
-            }
-
-            // Filter by CGST/SGST rates
+            // Filter by CGST/SGST
             if (productFilter.getCgst() != null) {
                 predicates.add(criteriaBuilder.equal(root.get("cgst"), productFilter.getCgst()));
             }
@@ -291,35 +285,70 @@ public class ProductService {
                 predicates.add(criteriaBuilder.equal(root.get("sgst"), productFilter.getSgst()));
             }
 
-            // Filter by lastModifiedOn date range
+            // Filter by discount rate
+            if (productFilter.getDiscountRateMoreThan() != null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("discountRate"), productFilter.getDiscountRateMoreThan()));
+            }
+            if (productFilter.getDiscountRateLessThan() != null) {
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("discountRate"), productFilter.getDiscountRateLessThan()));
+            }
+
+            // Filter by HSN code
+            if (productFilter.getHsnCode() != null) {
+                predicates.add(criteriaBuilder.equal(root.get("hsnCode"), productFilter.getHsnCode().trim()));
+            }
+
+            // Filter by taxed flag
+            if (productFilter.getTaxed() != null) {
+                predicates.add(criteriaBuilder.equal(root.get("taxed"), productFilter.getTaxed()));
+            }
+
+            // Filter by unit of measure
+            if (productFilter.getUnitOfMeasure() != null) {
+                predicates.add(criteriaBuilder.equal(root.get("unitOfMeasure"), productFilter.getUnitOfMeasure().trim()));
+            }
+
+            // Filter by supplier IDs
+            if (productFilter.getSupplierIds() != null && !productFilter.getSupplierIds().isEmpty()) {
+                predicates.add(root.get("supplier").get("id").in(productFilter.getSupplierIds()));
+            }
+
+            // Filter by brand IDs
+            if (productFilter.getBrandIds() != null && !productFilter.getBrandIds().isEmpty()) {
+                predicates.add(root.get("brand").get("id").in(productFilter.getBrandIds()));
+            }
+
+            // Filter by last modified date range
             if (productFilter.getFrom() != null) {
                 predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("lastModifiedOn"), productFilter.getFrom()));
             }
             if (productFilter.getTo() != null) {
-                predicates.add(criteriaBuilder.lessThan(root.get("lastModifiedOn"), productFilter.getTo()));
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("lastModifiedOn"), productFilter.getTo()));
             }
 
-            // Filter by categories (ensure all categories are matched)
+            // Filter by categories (ensure all specified categories match)
             if (productFilter.getCategoryIds() != null && !productFilter.getCategoryIds().isEmpty()) {
-                query.distinct(true); // Ensure distinct results since we're dealing with joins
+                query.distinct(true);
                 Subquery<Long> subquery = query.subquery(Long.class);
                 Root<Product> subqueryRoot = subquery.from(Product.class);
-                Join<Object, Object> subqueryCategories = subqueryRoot.join("categories");
+                Join<Product, Category> categoryJoin = subqueryRoot.join("categories");
 
-                // Group products and filter where category count matches
                 subquery.select(subqueryRoot.get("id"))
                         .where(criteriaBuilder.and(
-                                subqueryRoot.get("id").in(root.get("id")), // Match product
-                                subqueryCategories.get("id").in(productFilter.getCategoryIds()) // Match categories
+                                criteriaBuilder.equal(subqueryRoot.get("store"), store),
+                                subqueryRoot.get("id").in(root.get("id")),
+                                categoryJoin.get("id").in(productFilter.getCategoryIds())
                         ))
                         .groupBy(subqueryRoot.get("id"))
-                        .having(criteriaBuilder.equal(criteriaBuilder.count(subqueryCategories.get("id")), productFilter.getCategoryIds().size()));
+                        .having(criteriaBuilder.equal(criteriaBuilder.countDistinct(categoryJoin.get("id")), (long) productFilter.getCategoryIds().size()));
 
                 predicates.add(root.get("id").in(subquery));
             }
+
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
     }
+
 
     @Transactional
     public Map<Long, Product> validateProductsAndQuantity(Store store, List<ProductQuantityMap> productQuantity) {

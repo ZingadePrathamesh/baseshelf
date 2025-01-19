@@ -12,13 +12,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping("stores/{store-id}/state-code")
+@RequestMapping("stores/store-id/{store-id}/state-codes")
 @RequiredArgsConstructor
 public class StateController {
     private final StateRepository stateRepository;
 
     @Bean
-    @Order(value = 8)
+    @Order(value = 1)
     public CommandLineRunner insertStateCodes(StateRepository stateRepository) {
         return args -> {
             List<StateCode> states = new ArrayList<>();

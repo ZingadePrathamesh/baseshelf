@@ -14,8 +14,6 @@ import java.util.List;
 @AllArgsConstructor
 public class ProductFilter {
     private String name;
-    @PositiveOrZero(message = "Cannot be a negative value")
-    private Long brandId;
     private List<Long> categoryIds;
     @PastOrPresent(message = "cannot be a future date")
     private LocalDate from;
@@ -33,4 +31,12 @@ public class ProductFilter {
     private Float cgst;
     @PositiveOrZero(message = "Cannot be a negative value")
     private Float sgst;
+
+    private Float discountRateLessThan;
+    private Float discountRateMoreThan;
+    private String hsnCode;
+    private Boolean taxed;
+    private String unitOfMeasure;
+    private List<Long> supplierIds;
+    private List<Long> brandIds;
 }

@@ -1,6 +1,8 @@
 package com.baseshelf.store;
 
 import com.baseshelf.category.CategoryService;
+import com.baseshelf.state.StateCode;
+import com.baseshelf.state.StateController;
 import jakarta.transaction.Transactional;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -69,11 +71,12 @@ public class StoreService {
 
     //Inserting test data for development environment. You can remove it if you want.
     @Bean
-    @Order(value = 1)
+    @Order(value = 2)
     public CommandLineRunner insertStores(
-            StoreRepository storeRepository
+            StoreRepository storeRepository, StateController controller
     ){
         return args -> {
+            StateCode stateCode = controller.getAllStateCode().get(0);
             Store store = Store.builder()
                     .email("johndoe@gmail.com")
                     .password("strongPassword")
@@ -81,6 +84,8 @@ public class StoreService {
                     .name("John Doe Clothing")
                     .address("California")
                     .gstinNumber("1234567890ABCDE")
+                    .contactNumber("9870654322")
+                    .stateCode(stateCode)
                     .build();
             Store store2 = Store.builder()
                     .email("smartit@gmail.com")
@@ -89,6 +94,8 @@ public class StoreService {
                     .name("Smart IT Clothing")
                     .address("California")
                     .gstinNumber("1234567890ABCDE")
+                    .contactNumber("9870654322")
+                    .stateCode(stateCode)
                     .build();
             List<Store> stores = new ArrayList<>();
             stores.add(store2);

@@ -3,8 +3,10 @@ package com.baseshelf.order;
 import com.baseshelf.customer.Customer;
 import com.baseshelf.product.Product;
 import com.baseshelf.product.ProductService;
+import com.baseshelf.state.StateService;
 import com.baseshelf.store.Store;
 import com.baseshelf.store.StoreService;
+import com.baseshelf.utils.InvalidGSTINException;
 import com.baseshelf.utils.NumberToWordsConverter;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
@@ -14,7 +16,6 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
@@ -31,10 +32,11 @@ public class ProductOrderService {
     private final ProductService productService;
     private final StoreService storeService;
     private final NumberToWordsConverter numberToWordsConverter;
+    private final StateService stateService;
 
 
 //    @Bean
-    @Order(value = 5)
+    @Order(value = 7)
     public CommandLineRunner insertOrder(
             ProductOrderRepository productOrderRepository,
             ProductService productService,
@@ -56,11 +58,18 @@ public class ProductOrderService {
         };
     }
 
-    public ProductOrderResponseDto getById(Long storeId, Long orderId){
+    public ProductOrderResponseDto getDtoById(Long storeId, Long orderId){
         Store store = storeService.getById(storeId);
         Optional<ProductOrder> productOrderOptional = productOrderRepository.findByStoreAndId(store,orderId);
         return this.orderResponseDtoMapper(productOrderOptional
                 .orElseThrow(()-> new OrderNotFoundException("Order with id: " + orderId +  "do not exist!")));
+    }
+
+    public ProductOrder getById(Long storeId, Long orderId){
+        Store store = storeService.getById(storeId);
+        Optional<ProductOrder> productOrderOptional = productOrderRepository.findByStoreAndId(store,orderId);
+        return productOrderOptional
+                .orElseThrow(()-> new OrderNotFoundException("Order with id: " + orderId +  "do not exist!"));
     }
 
     public List<ProductOrderResponseDto> getAllByStoreAndFilter(Long storeId, ProductOrderFilter filter) {
@@ -69,6 +78,21 @@ public class ProductOrderService {
         return productOrders.stream()
                 .map(this::orderResponseDtoMapper)
                 .toList();
+    }
+
+    public void validateCustomer(Customer customer){
+        stateService.stateCodeExists(customer.getStateCode());
+        String gstin = customer.getGstin();
+        if(gstin.length() > 16 || gstin.length() < 15)
+            throw new InvalidGSTINException("Customer's GSTIN is invalid");
+    }
+
+
+    //Incomplete implementation. Future scope
+    @Transactional
+    public ProductOrderResponseDto updateProductOrder(Long storeId, Long productOrderId, ProductOrderResponseDto orderResponseDto){
+        ProductOrder productOrder = this.getById(storeId, productOrderId);
+        return orderResponseDtoMapper(productOrder);
     }
 
 //    public List<ProductOrder> findAllByStoreAndFilter(Long storeId, ProductOrderFilter filter) {
@@ -113,6 +137,7 @@ public class ProductOrderService {
 
     @Transactional
     public ProductOrderResponseDto createOrder(Long storeId, ProductOrderRequest productOrderRequest) {
+        validateCustomer(productOrderRequest.getCustomer());
         Store store = storeService.getById(storeId);
         Float totalAmountExcGst = 0F;
         Float totalAmountIncGst = 0F;
@@ -185,7 +210,7 @@ public class ProductOrderService {
         productOrder.setTotalGst(BigDecimal.valueOf(totalGst).setScale(2, RoundingMode.HALF_UP));
 
         productOrder = productOrderRepository.save(productOrder);
-        return this.getById(storeId, productOrder.getId());
+        return this.getDtoById(storeId, productOrder.getId());
     }
 
     public String numberToWordCustom(Float number){
