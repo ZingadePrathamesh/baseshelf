@@ -8,30 +8,28 @@ import org.springframework.stereotype.Service;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class ReceiptService {
 
+    final int PADDING_X = 20;
+    final int PADDING_Y = 40;
+    final int ELEMENT_MARGIN_Y = 5;
+
+    final int TEXT_HEIGHT_1 = 36;
+    final int TEXT_HEIGHT_3 = 25;
+
     public BufferedImage createReceipt(ProductOrderResponseDto dto){
-        final int RECEIPT_WIDTH = 685;
-        final int RECEIPT_HEIGHT = 900;
-
-        final int PADDING_X = 20;
-        final int PADDING_Y = 40;
-        final int ELEMENT_MARGIN_Y = 5;
-
-        final int TEXT_HEIGHT_1 = 42;
-        final int TEXT_HEIGHT_2 = 36;
-        final int TEXT_HEIGHT_3 = 25;
-
         int x = 0;
         int y = 0;
 
-
+        final int RECEIPT_WIDTH = 685;
+        int RECEIPT_HEIGHT = calculateReceiptHeight(dto);
+        
         BufferedImage bufferedImage = new BufferedImage(RECEIPT_WIDTH, RECEIPT_HEIGHT, BufferedImage.TYPE_INT_RGB);
 
         Graphics2D graphics2D = bufferedImage.createGraphics();
@@ -77,7 +75,9 @@ public class ReceiptService {
         //printing Address number
         y += ELEMENT_MARGIN_Y + TEXT_HEIGHT_3;
         graphics2D.setFont(font3);
-        graphics2D.drawString(dto.getStore().getAddress(), x, y);
+        int w = RECEIPT_WIDTH - PADDING_X * 2;
+        drawTextLine(dto.getStore().getAddress(), x, w, fontMetrics, graphics2D, y);
+//        graphics2D.drawString(dto.getStore().getAddress(), x, y);
 
         //printing Address number
         y += ELEMENT_MARGIN_Y + TEXT_HEIGHT_3;
@@ -99,14 +99,61 @@ public class ReceiptService {
 
         fontMetrics = graphics2D.getFontMetrics();
         int x1 = x;
-        int x3 = RECEIPT_WIDTH - PADDING_X - fontMetrics.stringWidth("000000.00");
-        int x2 = x3 - fontMetrics.stringWidth("0000") - PADDING_X;
-        int x4 = x2 - fontMetrics.stringWidth("00000") - PADDING_X;
+        int x5 = RECEIPT_WIDTH - PADDING_X - fontMetrics.stringWidth("000000.00");
+        int x4 = x5 - PADDING_X - fontMetrics.stringWidth("0000.00");
+        int x3 = x4 - PADDING_X - fontMetrics.stringWidth("0000.00");
+        int x2 = x3 - PADDING_X - fontMetrics.stringWidth("000");
 
         graphics2D.drawString("Item", x1, y);
-        graphics2D.drawString("GST", x4, y);
-        graphics2D.drawString("Qt.", x2, y);
-        graphics2D.drawString("Amt.", x3, y);
+        graphics2D.drawString("QT.", x2, y);
+        graphics2D.drawString("CGST", x3, y);
+        graphics2D.drawString("SGST.", x4, y);
+        graphics2D.drawString("Amt.", x5, y);
+
+        y+= ELEMENT_MARGIN_Y;
+        graphics2D.setColor(Color.GRAY);
+        graphics2D.drawLine(PADDING_X, y, RECEIPT_WIDTH - PADDING_X, y);
+        graphics2D.setColor(Color.BLACK);
+        y += ELEMENT_MARGIN_Y;
+//        w = x1 - x2;
+        for (OrderItemResponse oi : dto.getOrderItems()){
+            y += TEXT_HEIGHT_3 + ELEMENT_MARGIN_Y;
+
+            String name = oi.getProduct().getName();
+            name = name.length() < 16? name : name.substring(0, 16);
+            graphics2D.drawString(name, x1, y);
+            graphics2D.drawString(oi.getQuantity().toString(), x2, y);
+            graphics2D.drawString(oi.getCgst().toString(), x3, y);
+            graphics2D.drawString(oi.getSgst().toString(), x4, y);
+            graphics2D.drawString(oi.getAmountExcludingGst().toString(), x5, y);
+
+            y += ELEMENT_MARGIN_Y + TEXT_HEIGHT_3;
+            graphics2D.drawString(oi.getCgstAmount().toString(), x3, y);
+            graphics2D.drawString(oi.getSgstAmount().toString(), x4, y);
+            graphics2D.drawString(oi.getAmountIncludingGst().toString(), x5, y);
+
+            y += ELEMENT_MARGIN_Y;
+            graphics2D.setColor(Color.GRAY);
+            graphics2D.drawLine(x, y,RECEIPT_WIDTH-PADDING_X, y);
+            graphics2D.setColor(Color.BLACK);
+        }
+
+        y += ELEMENT_MARGIN_Y * 4 + TEXT_HEIGHT_3;
+
+        //Totalling amount here
+        graphics2D.drawString("Sub Total", x1, y);
+//        graphics2D.drawString("--", x2, y);
+        graphics2D.drawString(dto.getTotalAmountExcludingGst().toString(), x5, y);
+
+        y += TEXT_HEIGHT_3 + ELEMENT_MARGIN_Y;
+        graphics2D.drawString("Total GST", x1, y);
+//        graphics2D.drawString("--" , x2, y);
+        graphics2D.drawString(dto.getTotalGst().toString(), x5, y);
+
+
+        y += TEXT_HEIGHT_3 + ELEMENT_MARGIN_Y;
+        graphics2D.drawString("Discount", x1, y);
+        graphics2D.drawString(dto.getTotalDiscount().toString(), x5, y);
 
         y+= ELEMENT_MARGIN_Y;
         graphics2D.setColor(Color.GRAY);
@@ -114,49 +161,17 @@ public class ReceiptService {
         graphics2D.setColor(Color.BLACK);
         y += ELEMENT_MARGIN_Y;
 
-        for (OrderItemResponse oi : dto.getOrderItems()){
-            y += TEXT_HEIGHT_3 + ELEMENT_MARGIN_Y;
-
-            String name = oi.getProduct().getName();
-            Integer quantity = oi.getQuantity();
-            BigDecimal amount = oi.getAmountExcludingGst().multiply(BigDecimal.valueOf(quantity)).setScale(2, RoundingMode.UP);
-
-            graphics2D.drawString(name, x1, y);
-            graphics2D.drawString(oi.getGst().toString() + "%", x4, y);
-            graphics2D.drawString(quantity.toString(), x2, y);
-            graphics2D.drawString(amount.toString(), x3, y);
-        }
-
-        //divider
-        y+= ELEMENT_MARGIN_Y * 3;
-        graphics2D.setColor(Color.GRAY);
-        graphics2D.drawLine(PADDING_X, y, RECEIPT_WIDTH - PADDING_X, y);
-        graphics2D.setColor(Color.BLACK);
-
-        y += ELEMENT_MARGIN_Y * 4 + TEXT_HEIGHT_3;
-
-        //Totalling amount here
-        graphics2D.drawString("Sub Total", x1, y);
-//        graphics2D.drawString("--", x2, y);
-        graphics2D.drawString(dto.getTotalAmountExcludingGst().toString(), x3, y);
-
-        y += TEXT_HEIGHT_3 + ELEMENT_MARGIN_Y;
-        graphics2D.drawString("Total GST", x1, y);
-//        graphics2D.drawString("--" , x2, y);
-        graphics2D.drawString(dto.getTotalGst().toString(), x3, y);
-
-
-        y += TEXT_HEIGHT_3 + ELEMENT_MARGIN_Y;
-        graphics2D.drawString("Discount", x1, y);
-//        graphics2D.drawString("--" , x2, y);
-        graphics2D.drawString(dto.getTotalDiscount().toString(), x3, y);
-
         y += TEXT_HEIGHT_3 + ELEMENT_MARGIN_Y;
         graphics2D.setFont(font2);
-        graphics2D.drawString("Grand Total", x1, y);
-//        graphics2D.drawString("--" , x2, y);
-        graphics2D.drawString(dto.getTotalAmountIncludingGst().toString(), x3, y);
+        graphics2D.drawString("Grand Total (INR)", x1, y);
+        graphics2D.drawString(dto.getTotalAmountIncludingGst().toString(), x5, y);
+
         graphics2D.setFont(font3);
+        y += TEXT_HEIGHT_3 + ELEMENT_MARGIN_Y;
+        graphics2D.drawString("(in words)", x1, y);
+        int width = 685 - x2 - 20;
+
+        y = drawTextLine(dto.getAmountInWords(), x2, width, fontMetrics, graphics2D, y);
 
         //ending
         fontMetrics = graphics2D.getFontMetrics();
@@ -169,6 +184,36 @@ public class ReceiptService {
 
         graphics2D.dispose();
         return bufferedImage;
+    }
+
+    private int calculateReceiptHeight(ProductOrderResponseDto dto) {
+        int baseHeight = 800; // Base receipt height
+        int itemsHeight = dto.getOrderItems().size() * (TEXT_HEIGHT_3 + ELEMENT_MARGIN_Y) * 2;
+        return baseHeight + itemsHeight;
+    }
+
+    private static int drawTextLine(String str, int x2, int width, FontMetrics fontMetrics, Graphics2D graphics2D, int y) {
+        List<String> lines = new ArrayList<>();
+        StringBuilder currentLine = new StringBuilder();
+
+        for(String word: str.split(" ")){
+            String testLine = currentLine.isEmpty() ? word : currentLine + " " + word;
+            if (fontMetrics.stringWidth(testLine) > width) {
+                lines.add(currentLine.toString());
+                currentLine = new StringBuilder(word); // Start a new line with the current word
+            } else {
+                currentLine.append(currentLine.isEmpty() ? word : " " + word);
+            }
+        }
+        // Add the last line
+        lines.add(currentLine.toString());
+
+        // Draw the lines
+        for (String line : lines) {
+            graphics2D.drawString(line, x2, y);
+            y += 25 + 5; // Move to the next line
+        }
+        return y;
     }
 
     public BufferedImage generateReceipt(ProductOrderResponseDto order) {
